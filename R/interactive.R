@@ -34,21 +34,21 @@ askUserWhatToEval <- function(dbPath = ".") {
       default = "all")
     methodTable <- methodTable |> dplyr::filter(model %in% models)
     obsNrFilter <- getUserInputNrs(
-      "Choose obsNr(s)",
-      methodTable$obsNr |> unique(),
+      "Choose obs",
+      methodTable$obs |> unique(),
       multi = TRUE,
       default = "all")
-    methodTable <- methodTable |> dplyr::filter(obsNr %in% obsNrFilter)
+    methodTable <- methodTable |> dplyr::filter(obs %in% obsNrFilter)
     methodsFilter <- getUserInput(
       "Choose method(s)",
       methodTable$method |> unique(),
       multi = TRUE,
       default = "all")
     methodTable <- methodTable |> dplyr::filter(method %in% methodsFilter)
-    analysis <- DEEBpath::getUniqueDbEntries(dbPath, example)
+    truthNrs <- DEEBpath::getUniqueTruthNrs(dbPath, modelFilter = models, obsNrFilter = obsNrFilter)
     truthNrFilter <- getUserInputNrs(
       "Choose truthNr(s)",
-      analysis$truthNrs,
+      truthNrs,
       multi = TRUE,
       default = "all")
     readyToStart <- getUserInputYesNo(
@@ -93,7 +93,7 @@ askUserWhatToEval <- function(dbPath = ".") {
 
   # choice == "choose"
   cat("Scaning for possible choices...\n")
-  analysis <- DEEBpath::getUniqueDbEntries(dbPath, example)
+  analysis <- DEEBpath::getUniqueEntriesForEval(dbPath, example)
   models <- getUserInput(
     "Choose model(s)",
     analysis$models,
