@@ -18,14 +18,50 @@ askUserWhatToEval <- function(dbPath = ".") {
   dbPath <- normalizePath(dbPath, winslash="/", mustWork=TRUE)
   choice <- getUserInput(
     "Choose what to do",
-    c("scan" = "scan for new estimation files",
+    c("hyper" = "run estimations for hyper parameter optimization",
+      "scan" = "scan for new estimation files",
       "choose" = "choose what to (re-)evaluate"))
-  example <-
-    "example" == getUserInput(
-      "Which level?",
-      c("main", "example"),
-      default = "main")
 
+  example <- FALSE
+
+  if (choice == "hyper") {
+    cat("Scaning for possible choices...\n")
+    methodTable <- DEEBpath::getMethodTableHyper(dbPath)
+    models <- getUserInput(
+      "Choose model(s)",
+      methodTable$model |> unique(),
+      multi = TRUE,
+      default = "all")
+    methodTable <- methodTable |> dplyr::filter(model %in% models)
+    obsNrFilter <- getUserInputNrs(
+      "Choose obsNr(s)",
+      methodTable$obsNr |> unique(),
+      multi = TRUE,
+      default = "all")
+    methodTable <- methodTable |> dplyr::filter(obsNr %in% obsNrFilter)
+    methodsFilter <- getUserInput(
+      "Choose method(s)",
+      methodTable$method |> unique(),
+      multi = TRUE,
+      default = "all")
+    methodTable <- methodTable |> dplyr::filter(method %in% methodsFilter)
+    analysis <- DEEBpath::getUniqueDbEntries(dbPath, example)
+    truthNrFilter <- getUserInputNrs(
+      "Choose truthNr(s)",
+      analysis$truthNrs,
+      multi = TRUE,
+      default = "all")
+    readyToStart <- getUserInputYesNo(
+      "Ready to start?",
+      default = "Yes")
+    if (readyToStart)
+      startEstimHyper(
+        dbPath,
+        methodTable,
+        truthNrFilter
+      )
+    return(invisible())
+  }
   if (choice == "scan") {
     cat("Scaning for new estimation files...\n")
     newEsti <- DEEBpath::getNew(dbPath, example)
