@@ -25,7 +25,7 @@ askUserWhatToEval <- function(dbPath = ".") {
 
   switch(
     choice,
-    copyTruth = startCoptTruth(dbPath),
+    copyTruth = startCopyTruth(dbPath),
     hyper = interactHyper(dbPath),
     scan = interactScan(dbPath),
     choice = interactChoose(dbPath),
