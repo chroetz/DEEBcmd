@@ -20,78 +20,94 @@ askUserWhatToEval <- function(dbPath = ".") {
     "Choose what to do",
     c("hyper" = "run estimations for hyper parameter optimization",
       "scan" = "scan for new estimation files",
-      "choose" = "choose what to (re-)evaluate"))
+      "choose" = "choose what to (re-)evaluate",
+      "copyTruth" = "copy truth"))
 
-  example <- FALSE
+  switch(
+    choice,
+    copyTruth = startCoptTruth(dbPath),
+    hyper = interactHyper(dbPath),
+    scan = interactScan(dbPath),
+    choice = interactChoose(dbPath),
+    stop("Choice not implemented."))
+}
 
-  if (choice == "hyper") {
-    cat("Scaning for possible choices...\n")
-    methodTable <- DEEBpath::getMethodTableHyper(dbPath)
-    models <- getUserInput(
-      "Choose model(s)",
-      methodTable$model |> unique(),
-      multi = TRUE,
-      default = "all")
-    methodTable <- methodTable |> dplyr::filter(model %in% models)
-    obsNrFilter <- getUserInputNrs(
-      "Choose obs",
-      methodTable$obs |> unique(),
-      multi = TRUE,
-      default = "all")
-    methodTable <- methodTable |> dplyr::filter(obs %in% obsNrFilter)
-    methodsFilter <- getUserInput(
-      "Choose method(s)",
-      methodTable$method |> unique(),
-      multi = TRUE,
-      default = "all")
-    methodTable <- methodTable |> dplyr::filter(method %in% methodsFilter)
-    truthNrs <- DEEBpath::getUniqueTruthNrs(dbPath, modelFilter = models, obsNrFilter = obsNrFilter)
-    truthNrFilter <- getUserInputNrs(
-      "Choose truthNr(s)",
-      truthNrs,
-      multi = TRUE,
-      default = "all")
-    readyToStart <- getUserInputYesNo(
-      "Ready to start?",
-      default = "Yes")
-    if (readyToStart)
-      startEstimHyper(
-        dbPath,
-        methodTable,
-        truthNrFilter
-      )
-    return(invisible())
-  }
-  if (choice == "scan") {
-    cat("Scaning for new estimation files...\n")
-    newEsti <- DEEBpath::getNew(dbPath, example)
-    newEsti$example <- example
-    if (nrow(newEsti) == 0) {
-      cat("No new estimation files detected.\n")
-    } else {
-      cat("Found", nrow(newEsti), "new estimation files. The first three are:\n")
-      print(newEsti[1:min(3,nrow(newEsti)),])
-    }
-    choice <- getUserInput(
-      "Choose what to do",
-      c("new" = "evaluate new",
-        "choose" = "choose what to (re-)evaluate",
-        "abort" = "abort"))
-    switch(
-      choice,
-      abort = return(invisible(NULL)),
-      new = {
-        startComp(rlang::expr_text(rlang::expr(
-          DEEBeval::runEvalTbl(
-            !!dbPath,
-            DEEBpath::getNew(!!dbPath, !!example)))))
-        return(invisible(NULL))
-      },
-      choose = # continue
+startCopyTruth <- function(dbPath) {
+  startComp(rlang::expr_text(rlang::expr(
+    DEEBesti::copyTruth(!!dbPath))))
+  return(invisible())
+}
+
+interactHyper <- function(dbPath) {
+  cat("Scaning for possible choices...\n")
+  methodTable <- DEEBpath::getMethodTableHyper(dbPath)
+  models <- getUserInput(
+    "Choose model(s)",
+    methodTable$model |> unique(),
+    multi = TRUE,
+    default = "all")
+  methodTable <- methodTable |> dplyr::filter(model %in% models)
+  obsNrFilter <- getUserInputNrs(
+    "Choose obs",
+    methodTable$obs |> unique(),
+    multi = TRUE,
+    default = "all")
+  methodTable <- methodTable |> dplyr::filter(obs %in% obsNrFilter)
+  methodsFilter <- getUserInput(
+    "Choose method(s)",
+    methodTable$method |> unique(),
+    multi = TRUE,
+    default = "all")
+  methodTable <- methodTable |> dplyr::filter(method %in% methodsFilter)
+  truthNrs <- DEEBpath::getUniqueTruthNrs(dbPath, modelFilter = models, obsNrFilter = obsNrFilter)
+  truthNrFilter <- getUserInputNrs(
+    "Choose truthNr(s)",
+    truthNrs,
+    multi = TRUE,
+    default = "all")
+  readyToStart <- getUserInputYesNo(
+    "Ready to start?",
+    default = "Yes")
+  if (readyToStart)
+    startEstimHyper(
+      dbPath,
+      methodTable,
+      truthNrFilter
     )
-  }
+  return(invisible())
+}
 
-  # choice == "choose"
+interactScan <- function(dbPath) {
+  example <- FALSE
+  cat("Scaning for new estimation files...\n")
+  newEsti <- DEEBpath::getNew(dbPath, example)
+  newEsti$example <- example
+  if (nrow(newEsti) == 0) {
+    cat("No new estimation files detected.\n")
+  } else {
+    cat("Found", nrow(newEsti), "new estimation files. The first three are:\n")
+    print(newEsti[1:min(3,nrow(newEsti)),])
+  }
+  choice <- getUserInput(
+    "Choose what to do",
+    c("new" = "evaluate new",
+      "abort" = "abort"))
+  switch(
+    choice,
+    abort = return(invisible(NULL)),
+    new = {
+      startComp(rlang::expr_text(rlang::expr(
+        DEEBeval::runEvalTbl(
+          !!dbPath,
+          DEEBpath::getNew(!!dbPath, !!example)))))
+      return(invisible(NULL))
+    }
+  )
+}
+
+
+interactChoose <- function(dbPath) {
+  example <- FALSE
   cat("Scaning for possible choices...\n")
   analysis <- DEEBpath::getUniqueEntriesForEval(dbPath, example)
   models <- getUserInput(
