@@ -12,11 +12,11 @@ startEstimHyper <- function(
     len <- hyperParmsList$list |> length()
 
     for (i in seq_len(len)) {
-
+      obsNr <- DEEBpath::getObsNrFromName(dbPath, methodInfo$model, methodInfo$obs)
       startComp(rlang::expr_text(rlang::expr(
         DEEBesti::runOne(
           dbPath = !!dbPath,
-          obsNr = !!methodInfo$obs,
+          obsNr = !!obsNr,
           model = !!methodInfo$model,
           method = !!methodInfo$method,
           estiOptsFileName = !!methodInfo$estiOpts,

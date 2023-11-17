@@ -41,25 +41,27 @@ startCopyTruth <- function(dbPath) {
 interactHyper <- function(dbPath) {
   cat("Scaning for possible choices...\n")
   methodTable <- DEEBpath::getMethodTableHyper(dbPath)
-  models <- getUserInput(
+  modelFilter <- getUserInput(
     "Choose model(s)",
     methodTable$model |> unique(),
     multi = TRUE,
     default = "all")
-  methodTable <- methodTable |> dplyr::filter(model %in% models)
-  obsNrFilter <- getUserInputNrs(
+  methodTable <- methodTable |> dplyr::filter(model %in% modelFilter)
+  obsNameFilter <- getUserInput(
     "Choose obs",
     methodTable$obs |> unique(),
     multi = TRUE,
     default = "all")
-  methodTable <- methodTable |> dplyr::filter(obs %in% obsNrFilter)
+  methodTable <- methodTable |> dplyr::filter(obs %in% obsNameFilter)
   methodsFilter <- getUserInput(
     "Choose method(s)",
     methodTable$method |> unique(),
     multi = TRUE,
     default = "all")
   methodTable <- methodTable |> dplyr::filter(method %in% methodsFilter)
-  truthNrs <- DEEBpath::getUniqueTruthNrs(dbPath, modelFilter = models, obsNrFilter = obsNrFilter)
+  truthNrs <- DEEBpath::getUniqueTruthNrs(
+    dbPath,
+    modelFilter = modelFilter)
   truthNrFilter <- getUserInputNrs(
     "Choose truthNr(s)",
     truthNrs,
