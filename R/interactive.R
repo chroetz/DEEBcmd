@@ -33,8 +33,12 @@ askUserWhatToEval <- function(dbPath = ".") {
 }
 
 startCopyTruth <- function(dbPath) {
-  startComp(rlang::expr_text(rlang::expr(
-    DEEBesti::copyTruth(!!dbPath))))
+  startComp(
+    rlang::expr_text(rlang::expr(DEEBesti::copyTruth(!!dbPath))),
+    prefix = "DEEB_copyTruth",
+    timeInMinutes = 20,
+    mail = TRUE
+  )
   return(invisible())
 }
 
@@ -96,10 +100,12 @@ interactScan <- function(dbPath) {
     choice,
     abort = return(invisible(NULL)),
     new = {
-      startComp(rlang::expr_text(rlang::expr(
-        DEEBeval::runEvalTbl(
-          !!dbPath,
-          DEEBpath::getNew(!!dbPath)))))
+      startComp(
+        rlang::expr_text(rlang::expr(
+          DEEBeval::runEvalTbl(!!dbPath, DEEBpath::getNew(!!dbPath)))),
+        prefix = "DEEBeval",
+        timeInMinutes = 120,
+        mail = TRUE)
       return(invisible(NULL))
     }
   )
@@ -141,7 +147,7 @@ interactChoose <- function(dbPath) {
     default = "all")
   createPlots <- getUserInputYesNo(
     "Should plots be (re-)created?",
-    default = "Yes")
+    default = "No")
   readyToStart <- getUserInputYesNo(
     "Ready to start?",
     default = "Yes")
@@ -159,7 +165,10 @@ interactChoose <- function(dbPath) {
           createPlots = !!createPlots,
           verbose = FALSE
         )
-      ))
+      )),
+      prefix = "DEEBeval",
+      timeInMinutes = 120,
+      mail = TRUE
     )
   }
 }

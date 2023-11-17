@@ -19,7 +19,10 @@ startEstimHyper <- function(
             model = !!methodInfo$model,
             method = !!methodInfo$method,
             estiOptsFileName = !!methodInfo$estiOpts)
-        )))
+        )),
+        prefix = "DEEBesti",
+        timeInMinutes = if(is.null(methodInfo$timeInMinutes)) 10 else methodInfo$timeInMinutes,
+        mail = FALSE)
     } else {
       for (i in seq_len(len)) {
         startComp(rlang::expr_text(rlang::expr(
@@ -30,7 +33,10 @@ startEstimHyper <- function(
             method = !!methodInfo$method,
             estiOptsFileName = !!methodInfo$estiOpts,
             expansionNr = !!i)
-        )))
+        )),
+        prefix = "DEEBesti",
+        timeInMinutes = if(is.null(methodInfo$timeInMinutes)) 10 else methodInfo$timeInMinutes,
+        mail = FALSE)
       }
     }
   }

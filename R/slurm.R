@@ -1,5 +1,5 @@
 #' @export
-startComp <- function(cmdStr, prefix="DEEB") {
+startComp <- function(cmdStr, prefix="DEEB", timeInMinutes = NULL, mail=TRUE) {
   if (isSlurmAvailable()) {
     jobName <- paste0(prefix, "_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
     cat("Starting SLURM job", jobName, "\n")
@@ -10,7 +10,8 @@ startComp <- function(cmdStr, prefix="DEEB") {
       " --job-name=", jobName,
       " --output=_log/", jobName, "_%j.out",
       " --error=_log/", jobName, "_%j.err",
-      " --mail-type=END",
+      if (mail) " --mail-type=END",
+      if (!is.null(timeInMinutes)) " --time=", timeInMinutes,
       " --wrap=\"Rscript -e '", gsub("\"", "\\\\\"", cmdStr), "'\"")
     cat(clcom, "\n")
     system(clcom)
