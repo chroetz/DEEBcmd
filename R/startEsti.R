@@ -19,6 +19,7 @@ startEstimHyper <- function(
           obsNr = !!methodInfo$obs,
           model = !!methodInfo$model,
           method = !!methodInfo$method,
+          estiOptsFileName = !!methodInfo$estiOpts,
           expansionNr = !!i)
       )))
     }
