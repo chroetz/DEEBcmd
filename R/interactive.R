@@ -28,7 +28,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     copyTruth = startCopyTruth(dbPath),
     hyper = interactHyper(dbPath),
     scan = interactScan(dbPath),
-    choice = interactChoose(dbPath),
+    choose = interactChoose(dbPath),
     stop("Choice not implemented."))
 }
 
@@ -78,10 +78,8 @@ interactHyper <- function(dbPath) {
 }
 
 interactScan <- function(dbPath) {
-  example <- FALSE
   cat("Scaning for new estimation files...\n")
-  newEsti <- DEEBpath::getNew(dbPath, example)
-  newEsti$example <- example
+  newEsti <- DEEBpath::getNew(dbPath)
   if (nrow(newEsti) == 0) {
     cat("No new estimation files detected.\n")
   } else {
@@ -99,7 +97,7 @@ interactScan <- function(dbPath) {
       startComp(rlang::expr_text(rlang::expr(
         DEEBeval::runEvalTbl(
           !!dbPath,
-          DEEBpath::getNew(!!dbPath, !!example)))))
+          DEEBpath::getNew(!!dbPath)))))
       return(invisible(NULL))
     }
   )
@@ -107,9 +105,8 @@ interactScan <- function(dbPath) {
 
 
 interactChoose <- function(dbPath) {
-  example <- FALSE
   cat("Scaning for possible choices...\n")
-  analysis <- DEEBpath::getUniqueEntriesForEval(dbPath, example)
+  analysis <- DEEBpath::getUniqueEntriesForEval(dbPath)
   models <- getUserInput(
     "Choose model(s)",
     analysis$models,
@@ -152,7 +149,6 @@ interactChoose <- function(dbPath) {
         DEEBeval::runEval(
           dbPath = !!dbPath,
           models = !!models,
-          example = !!example,
           methodsFilter = !!methodsFilter,
           obsNrFilter = !!obsNrFilter,
           truthNrFilter = !!truthNrFilter,
