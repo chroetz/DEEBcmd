@@ -8,13 +8,15 @@ startEstimHyper <- function(
   for (i in seq_len(nrow(methodTable))) {
 
     methodInfo <- methodTable[i, ]
+    obsNr <- DEEBpath::getObsNrFromName(dbPath, methodInfo$model, methodInfo$obs)
     hyperParmsPath <- DEEBpath::getMethodFile(dbPath, methodInfo$method)
     hyperParmsList <- ConfigOpts::readOptsBare(hyperParmsPath)
-    hyperParmsList <- ConfigOpts::expandList(hyperParmsList)
-    obsNr <- DEEBpath::getObsNrFromName(dbPath, methodInfo$model, methodInfo$obs)
-
-    len <- hyperParmsList$list |> length()
-    expansionNrList <- if (len == 1) list(NULL) else seq_len(len)
+    if (ConfigOpts::getClassAt(hyperParmsList, 1) == "List") {
+      hyperParmsList <- ConfigOpts::expandList(hyperParmsList)
+      expansionNrList <- seq_along(hyperParmsList$list)
+    } else {
+      expansionNrList <- list(NULL)
+    }
 
     for (expansionNr in expansionNrList) {
       if (forceOverwrite) {
