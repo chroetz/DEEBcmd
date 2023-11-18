@@ -103,19 +103,32 @@ interactScan <- function(dbPath) {
     "Choose what to do",
     c("new" = "evaluate new",
       "abort" = "abort"))
-  switch(
-    choice,
-    abort = return(invisible(NULL)),
-    new = {
-      startComp(
-        rlang::expr_text(rlang::expr(
-          DEEBeval::runEvalTbl(!!dbPath, DEEBpath::getNew(!!dbPath)))),
-        prefix = "DEEBeval",
-        timeInMinutes = 120,
-        mail = TRUE)
-      return(invisible(NULL))
-    }
-  )
+  if (choice != "new") return(invisible(NULL))
+  createPlots <- getUserInputYesNo(
+    "Should plots be created?",
+    default = "No")
+  writeScoreHtml <- getUserInputYesNo(
+    "Should the scores-html be created?",
+    default = "Yes")
+  readyToStart <- getUserInputYesNo(
+    "Ready to start?",
+    default = "Yes")
+  if (readyToStart) {
+    startComp(
+      rlang::expr_text(rlang::expr(
+        DEEBeval::runEvalTbl(
+          !!dbPath,
+          DEEBpath::getNew(!!dbPath),
+          createPlots = !!createPlots,
+          writeScoreHtml = !!writeScoreHtml,
+          verbose = FALSE
+        )
+      )),
+      prefix = "DEEBeval",
+      timeInMinutes = 120,
+      mail = TRUE
+    )
+  }
 }
 
 
@@ -153,8 +166,11 @@ interactChoose <- function(dbPath) {
     multi = TRUE,
     default = "all")
   createPlots <- getUserInputYesNo(
-    "Should plots be (re-)created?",
+    "Should plots be created?",
     default = "No")
+  writeScoreHtml <- getUserInputYesNo(
+    "Should the scores-html be created?",
+    default = "Yes")
   readyToStart <- getUserInputYesNo(
     "Ready to start?",
     default = "Yes")
@@ -170,6 +186,7 @@ interactChoose <- function(dbPath) {
           taskNrFilter = !!taskNrFilter,
           scoreFilter = !!scoreFilter,
           createPlots = !!createPlots,
+          writeScoreHtml = !!writeScoreHtml,
           verbose = FALSE
         )
       )),
