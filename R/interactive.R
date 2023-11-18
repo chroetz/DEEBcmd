@@ -18,10 +18,10 @@ askUserWhatToEval <- function(dbPath = ".") {
   dbPath <- normalizePath(dbPath, winslash="/", mustWork=TRUE)
   choice <- getUserInput(
     "Choose what to do",
-    c("hyper" = "run estimations for hyper parameter optimization",
-      "scan" = "scan for new estimation files",
-      "choose" = "choose what to (re-)evaluate",
-      "copyTruth" = "copy truth"))
+    c("hyper" = "DEEBesti: run estimations for hyper parameter optimization",
+      "scan" = "DEEBeval: scan for new estimation files",
+      "choose" = "DEEBeval: choose what to (re-)evaluate",
+      "copyTruth" = "DEENesti: copy truth"))
 
   switch(
     choice,
@@ -32,6 +32,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     stop("Choice not implemented."))
 }
 
+
 startCopyTruth <- function(dbPath) {
   startComp(
     rlang::expr_text(rlang::expr(DEEBesti::copyTruth(!!dbPath))),
@@ -41,6 +42,7 @@ startCopyTruth <- function(dbPath) {
   )
   return(invisible())
 }
+
 
 interactHyper <- function(dbPath) {
   cat("Scaning for possible choices...\n")
@@ -71,6 +73,9 @@ interactHyper <- function(dbPath) {
     truthNrs,
     multi = TRUE,
     default = "all")
+  forceOverwrite <- getUserInputYesNo(
+    "Force overwrite?",
+    default = "No")
   readyToStart <- getUserInputYesNo(
     "Ready to start?",
     default = "Yes")
@@ -78,10 +83,12 @@ interactHyper <- function(dbPath) {
     startEstimHyper(
       dbPath,
       methodTable,
-      truthNrFilter
+      truthNrFilter,
+      forceOverwrite
     )
   return(invisible())
 }
+
 
 interactScan <- function(dbPath) {
   cat("Scaning for new estimation files...\n")
