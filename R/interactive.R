@@ -110,6 +110,9 @@ interactScan <- function(dbPath) {
   writeScoreHtml <- getUserInputYesNo(
     "Should the scores-html be created?",
     default = "Yes")
+  createSummary <- getUserInputYesNo(
+    "Should summary be created?",
+    default = "Yes")
   readyToStart <- getUserInputYesNo(
     "Ready to start?",
     default = "Yes")
@@ -121,6 +124,7 @@ interactScan <- function(dbPath) {
           DEEBpath::getNew(!!dbPath),
           createPlots = !!createPlots,
           writeScoreHtml = !!writeScoreHtml,
+          createSummary = !!createSummary,
           verbose = FALSE
         )
       )),
@@ -171,6 +175,9 @@ interactChoose <- function(dbPath) {
   writeScoreHtml <- getUserInputYesNo(
     "Should the scores-html be created?",
     default = "Yes")
+  createSummary <- getUserInputYesNo(
+    "Should summary be created?",
+    default = "Yes")
   readyToStart <- getUserInputYesNo(
     "Ready to start?",
     default = "Yes")
@@ -187,6 +194,7 @@ interactChoose <- function(dbPath) {
           scoreFilter = !!scoreFilter,
           createPlots = !!createPlots,
           writeScoreHtml = !!writeScoreHtml,
+          createSummary = !!createSummary,
           verbose = FALSE
         )
       )),
