@@ -24,7 +24,7 @@ askUserWhatToEval <- function(dbPath = ".") {
       "scan" = "DEEBeval: new, choose",
       "scanRun" = "DEEBeval: new, no plots, no scoreHTML, summary",
       "evalAll" = "DEEBeval: all, no plots, scoreHTML, summary",
-      "evalAllSumm" = "DEEBeval: all, no plots, no scoreHTML, summary",
+      "evalAllSumm" = "DEEBeval: all, no plots, no scoreHTML, summary"
     ))
 
   switch(
