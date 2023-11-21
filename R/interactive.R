@@ -21,6 +21,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     c("hyper" = "DEEBesti: run estimations for hyper parameter optimization",
       "scan" = "DEEBeval: scan for new estimation files",
       "choose" = "DEEBeval: choose what to (re-)evaluate",
+      "evalAll" = "DEEBeval: evaluate all (no plots)",
       "copyTruth" = "DEENesti: copy truth"))
 
   switch(
@@ -29,6 +30,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     hyper = interactHyper(dbPath),
     scan = interactScan(dbPath),
     choose = interactChoose(dbPath),
+    evalAll = startEvaluation(dbPath),
     stop("Choice not implemented."))
 }
 
@@ -203,4 +205,23 @@ interactChoose <- function(dbPath) {
       mail = TRUE
     )
   }
+}
+
+startEvaluation <- function(dbPath) {
+  models <- DEEBpath::getModels(dbPath)
+  startComp(
+    rlang::expr_text(rlang::expr(
+      DEEBeval::runEval(
+        dbPath = !!dbPath,
+        models = !!models,
+        createPlots = FALSE,
+        writeScoreHtml = TRUE,
+        createSummary = TRUE,
+        verbose = FALSE
+      )
+    )),
+    prefix = "DEEBeval",
+    timeInMinutes = 240,
+    mail = TRUE
+  )
 }
