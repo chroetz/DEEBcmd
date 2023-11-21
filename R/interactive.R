@@ -24,7 +24,10 @@ askUserWhatToEval <- function(dbPath = ".") {
       "scan" = "DEEBeval: new, choose",
       "scanRun" = "DEEBeval: new, no plots, no scoreHTML, summary",
       "evalAll" = "DEEBeval: all, no plots, scoreHTML, summary",
-      "evalAllSumm" = "DEEBeval: all, no plots, no scoreHTML, summary"
+      "evalAllSumm" = "DEEBeval: all, no plots, no scoreHTML, summary",
+      "onlyScores" = "DEEBeval: all, no plots, no scoreHTML, no summary",
+      "onlyScoreHtml" = "DEEBeval: only scoreHTML",
+      "onlySummary" = "DEEBeval: only summary"
     ))
 
   switch(
@@ -36,6 +39,9 @@ askUserWhatToEval <- function(dbPath = ".") {
     choose = interactChoose(dbPath),
     evalAll = startEvaluation(dbPath, FALSE, TRUE, TRUE),
     evalAllSumm = startEvaluation(dbPath, FALSE, FALSE, TRUE),
+    onlyScores = startEvaluation(dbPath, FALSE, FALSE, FALSE),
+    onlyScoreHtml = startScoresHtml(dbPath),
+    onlySummary = startSummary(dbPath),
     stop("Choice not implemented."))
 }
 
@@ -235,4 +241,26 @@ startEvaluation <- function(dbPath, createPlots, writeScoreHtml, createSummary) 
     timeInMinutes = 240,
     mail = TRUE
   )
+}
+
+startScoresHtml <- function(dbPath) {
+  models <- DEEBpath::getModels(dbPath)
+  for (model in models) {
+    startComp(
+      rlang::expr_text(rlang::expr(
+        DEEBeval::runScoreHtml(!!dbPath, !!model))),
+    prefix = "DEEBeval",
+    timeInMinutes = 60,
+    mail = TRUE)
+  }
+}
+
+
+startSummary <- function(dbPath) {
+  startComp(
+    rlang::expr_text(rlang::expr(
+      DEEBeval::createSummary(!!dbPath))),
+  prefix = "DEEBeval",
+  timeInMinutes = 60,
+  mail = TRUE)
 }
