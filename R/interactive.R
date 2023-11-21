@@ -128,7 +128,7 @@ interactScanEval <- function(dbPath) {
           verbose = FALSE
         )
       )),
-      prefix = "DEEBeval",
+      prefix = "DEEBevalrunEvalTbl-choose",
       timeInMinutes = 120,
       mail = TRUE
     )
@@ -148,7 +148,7 @@ startNewEval <- function(dbPath) {
         verbose = FALSE
       )
     )),
-    prefix = "DEEBeval",
+    prefix = "DEEBeval-runEvalTbl"-all,
     timeInMinutes = 120,
     mail = TRUE
   )
@@ -217,7 +217,7 @@ interactChoose <- function(dbPath) {
           verbose = FALSE
         )
       )),
-      prefix = "DEEBeval",
+      prefix = "DEEBeval-runEval-choosen",
       timeInMinutes = 120,
       mail = TRUE
     )
@@ -237,7 +237,7 @@ startEvaluation <- function(dbPath, createPlots, writeScoreHtml, createSummary) 
         verbose = FALSE
       )
     )),
-    prefix = "DEEBeval",
+    prefix = "DEEBeval-runEval-all",
     timeInMinutes = 240,
     mail = TRUE
   )
@@ -249,7 +249,7 @@ startScoresHtml <- function(dbPath) {
     startComp(
       rlang::expr_text(rlang::expr(
         DEEBeval::runScoreHtml(!!dbPath, !!model))),
-    prefix = "DEEBeval",
+    prefix = paste0("DEEBeval-scoresHtml-", model),
     timeInMinutes = 60,
     mail = TRUE)
   }
@@ -260,7 +260,7 @@ startSummary <- function(dbPath) {
   startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::createSummary(!!dbPath))),
-  prefix = "DEEBeval",
+  prefix = "DEEBeval-summary",
   timeInMinutes = 60,
   mail = TRUE)
 }
