@@ -35,7 +35,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     scanRun = startNewEval(dbPath),
     choose = interactChoose(dbPath),
     evalAll = startEvaluation(dbPath, FALSE, TRUE, TRUE),
-    evalAllSumm = startEvaluation(dbPath, FALSE, TRUE, TRUE),
+    evalAllSumm = startEvaluation(dbPath, FALSE, FALSE, TRUE),
     stop("Choice not implemented."))
 }
 
