@@ -18,19 +18,24 @@ askUserWhatToEval <- function(dbPath = ".") {
   dbPath <- normalizePath(dbPath, winslash="/", mustWork=TRUE)
   choice <- getUserInput(
     "Choose what to do",
-    c("hyper" = "DEEBesti: run estimations for hyper parameter optimization",
-      "scan" = "DEEBeval: scan for new estimation files",
-      "choose" = "DEEBeval: choose what to (re-)evaluate",
-      "evalAll" = "DEEBeval: evaluate all (no plots)",
-      "copyTruth" = "DEENesti: copy truth"))
+    c("copyTruth" = "DEEBesti: copy truth",
+      "hyper" = "DEEBesti: choose",
+      "choose" = "DEEBeval: choose",
+      "scan" = "DEEBeval: new, choose",
+      "scanRun" = "DEEBeval: new, no plots, no scoreHTML, summary",
+      "evalAll" = "DEEBeval: all, no plots, scoreHTML, summary",
+      "evalAllSumm" = "DEEBeval: all, no plots, no scoreHTML, summary",
+    ))
 
   switch(
     choice,
     copyTruth = startCopyTruth(dbPath),
     hyper = interactHyper(dbPath),
-    scan = interactScan(dbPath),
+    scan = interactScanEval(dbPath),
+    scanRun = startNewEval(dbPath),
     choose = interactChoose(dbPath),
-    evalAll = startEvaluation(dbPath),
+    evalAll = startEvaluation(dbPath, FALSE, TRUE, TRUE),
+    evalAllSumm = startEvaluation(dbPath, FALSE, TRUE, TRUE),
     stop("Choice not implemented."))
 }
 
@@ -92,20 +97,7 @@ interactHyper <- function(dbPath) {
 }
 
 
-interactScan <- function(dbPath) {
-  cat("Scaning for new estimation files...\n")
-  newEsti <- DEEBpath::getNew(dbPath)
-  if (nrow(newEsti) == 0) {
-    cat("No new estimation files detected.\n")
-  } else {
-    cat("Found", nrow(newEsti), "new estimation files. The first three are:\n")
-    print(newEsti[1:min(3,nrow(newEsti)),])
-  }
-  choice <- getUserInput(
-    "Choose what to do",
-    c("new" = "evaluate new",
-      "abort" = "abort"))
-  if (choice != "new") return(invisible(NULL))
+interactScanEval <- function(dbPath) {
   createPlots <- getUserInputYesNo(
     "Should plots be created?",
     default = "No")
@@ -135,6 +127,25 @@ interactScan <- function(dbPath) {
       mail = TRUE
     )
   }
+}
+
+
+startNewEval <- function(dbPath) {
+  startComp(
+    rlang::expr_text(rlang::expr(
+      DEEBeval::runEvalTbl(
+        !!dbPath,
+        DEEBpath::getNew(!!dbPath),
+        createPlots = FALSE,
+        writeScoreHtml = FALSE,
+        createSummary = TRUE,
+        verbose = FALSE
+      )
+    )),
+    prefix = "DEEBeval",
+    timeInMinutes = 120,
+    mail = TRUE
+  )
 }
 
 
@@ -207,16 +218,16 @@ interactChoose <- function(dbPath) {
   }
 }
 
-startEvaluation <- function(dbPath) {
+startEvaluation <- function(dbPath, createPlots, writeScoreHtml, createSummary) {
   models <- DEEBpath::getModels(dbPath)
   startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::runEval(
         dbPath = !!dbPath,
         models = !!models,
-        createPlots = FALSE,
-        writeScoreHtml = TRUE,
-        createSummary = TRUE,
+        createPlots = !!createPlots,
+        writeScoreHtml = !!writeScoreHtml,
+        createSummary = !!createSummary,
         verbose = FALSE
       )
     )),
