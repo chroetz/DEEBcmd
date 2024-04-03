@@ -59,7 +59,13 @@ startCopyTruth <- function(dbPath) {
 
 interactHyper <- function(dbPath) {
   cat("Scaning for possible choices...\n")
-  methodTable <- DEEBpath::getMethodTableHyper(dbPath)
+  methodTableNamesAll <- DEEBpath::getMethodTableNames(dbPath)
+  methodTableNamesChosen <- getUserInput(
+    "Choose method tables(s)",
+    methodTableNamesAll,
+    multi = TRUE,
+    default = "all")
+  methodTable <- DEEBpath::getMethodTable(dbPath, methodTableNamesChosen)
   modelFilter <- getUserInput(
     "Choose model(s)",
     methodTable$model |> unique(),
