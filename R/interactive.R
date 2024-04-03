@@ -148,7 +148,7 @@ startNewEval <- function(dbPath) {
         verbose = FALSE
       )
     )),
-    prefix = "DEEBeval-runEvalTbl"-all,
+    prefix = "DEEBeval-runEvalTbl-all",
     timeInMinutes = 120,
     mail = TRUE
   )
