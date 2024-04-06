@@ -45,7 +45,11 @@ startEstimHyper <- function(
             method = !!methodInfo$method,
             expansionNr = !!expansionNr)
         )),
-        prefix = paste("DEEBesti", methodInfo$model, methodBase, expansionNr, sep="-"),
+        prefix = if (is.null(expansionNr)) {
+          paste("DEEBesti", methodInfo$model, methodBase, sep="-")
+        } else {
+          paste("DEEBesti", methodInfo$model, methodBase, expansionNr, sep="-")
+        },
         timeInMinutes = if(is.null(methodInfo$timeInMinutes)) 10 else methodInfo$timeInMinutes,
         mail = FALSE)
     }
