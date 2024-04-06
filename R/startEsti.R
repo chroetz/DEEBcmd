@@ -33,6 +33,8 @@ startEstimHyper <- function(
       if (length(openTruthNrs) == 0) {
         cat("All results seem to exist. Skipping.\n")
         next
+      } else {
+        cat(openTruthNrs, "new. Starting Job.\n")
       }
       methodBase <- basename(methodInfo$method)
       startComp(
