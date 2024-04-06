@@ -34,6 +34,7 @@ startEstimHyper <- function(
         cat("All results seem to exist. Skipping.\n")
         next
       }
+      methodBase <- basename(methodInfo$method)
       startComp(
         rlang::expr_text(rlang::expr(
           DEEBesti::runOne(
@@ -44,7 +45,7 @@ startEstimHyper <- function(
             method = !!methodInfo$method,
             expansionNr = !!expansionNr)
         )),
-        prefix = paste("DEEBesti", methodInfo$model, methodInfo$method, expansionNr, sep="-"),
+        prefix = paste("DEEBesti", methodInfo$model, methodBase, expansionNr, sep="-"),
         timeInMinutes = if(is.null(methodInfo$timeInMinutes)) 10 else methodInfo$timeInMinutes,
         mail = FALSE)
     }
