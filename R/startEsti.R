@@ -4,6 +4,8 @@ startEstimHyper <- function(
   truthNrFilter,
   forceOverwrite = FALSE
 ) {
+  nSkipped <- 0
+  nStarted <- 0
 
   for (i in seq_len(nrow(methodTable))) {
 
@@ -32,9 +34,11 @@ startEstimHyper <- function(
       }
       if (length(openTruthNrs) == 0) {
         cat("All results seem to exist. Skipping.\n")
+        nSkipped <- nSkipped + 1
         next
       } else {
-        cat(openTruthNrs, "new. Starting Job.\n")
+        cat(length(openTruthNrs), "new. Starting Job.\n")
+        nStarted <- nStarted + 1
       }
       methodBase <- basename(methodInfo$method)
       startComp(
@@ -56,4 +60,6 @@ startEstimHyper <- function(
         mail = FALSE)
     }
   }
+
+  cat("Started", nStarted, "jobs and skipped", nSkipped, "Jobs.\n")
 }
