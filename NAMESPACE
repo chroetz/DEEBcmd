@@ -3,4 +3,5 @@
 S3method(print,InteractionStarter)
 export(.)
 export(interact)
+export(interactAutoHyper)
 export(startComp)

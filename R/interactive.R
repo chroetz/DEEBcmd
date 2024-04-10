@@ -306,7 +306,7 @@ startSummary <- function(dbPath) {
 }
 
 
-startGenCube <- function(dbPath, startAfterJobIds = NULL, startEstim = FALSE) {
+startGenCube <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
   jobId <- startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::generateBestHyperCube(!!dbPath))),
@@ -314,7 +314,7 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, startEstim = FALSE) {
     timeInMinutes = 2,
     mail = TRUE,
     startAfterJobIds = startAfterJobIds)
-  if (startEstim) {
+  if (auto) {
     startComp(
       rlang::expr_text(rlang::expr(
         DEEBcmd::interactAutoHyper(!!dbPath, auto = TRUE))),
