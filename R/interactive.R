@@ -20,6 +20,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     "Choose what to do",
     c("copyTruth" = "DEEBesti: copy truth",
       "hyper" = "DEEBesti: choose",
+      "autoHyper" = "DEEBesti: auto hyper",
       "choose" = "DEEBeval: choose",
       "scan" = "DEEBeval: new, choose",
       "scanRun" = "DEEBeval: new, no plots, no scoreHTML, summary",
@@ -35,6 +36,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     choice,
     copyTruth = startCopyTruth(dbPath),
     hyper = interactHyper(dbPath),
+    autoHyper = interactAutoHyper(dbPath),
     scan = interactScanEval(dbPath),
     scanRun = startNewEval(dbPath),
     choose = interactChoose(dbPath),
@@ -111,6 +113,32 @@ interactHyper <- function(dbPath) {
 }
 
 
+#' @export
+interactAutoHyper <- function(dbPath, auto = FALSE) {
+  if (auto) {
+    methodTableNamesChosen <- DEEBpath::getMethodTableNames(dbPath, auto = TRUE)
+  } else {
+    cat("Scaning for possible choices...\n")
+    methodTableNamesAll <- DEEBpath::getMethodTableNames(dbPath)
+    methodTableNamesChosen <- getUserInput(
+      "Choose method tables(s)",
+      methodTableNamesAll,
+      multi = TRUE,
+      default = "all")
+  }
+  methodTable <- DEEBpath::getMethodTable(dbPath, methodTableNamesChosen)
+  truthNrs <- DEEBpath::getUniqueTruthNrs(dbPath)
+  startEstimHyper(
+    dbPath,
+    methodTable,
+    truthNrs,
+    forceOverwrite = FALSE,
+    runSummaryAfter = TRUE,
+    auto = TRUE)
+  return(invisible())
+}
+
+
 interactScanEval <- function(dbPath) {
   createPlots <- getUserInputYesNo(
     "Should plots be created?",
@@ -144,8 +172,8 @@ interactScanEval <- function(dbPath) {
 }
 
 
-startNewEval <- function(dbPath) {
-  startComp(
+startNewEval <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
+  jobId <- startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::runEvalTbl(
         !!dbPath,
@@ -158,8 +186,12 @@ startNewEval <- function(dbPath) {
     )),
     prefix = "DEEBeval-runEvalTbl-all",
     timeInMinutes = 120,
-    mail = TRUE
+    mail = TRUE,
+    startAfterJobIds = startAfterJobIds
   )
+  if (auto) {
+    startGenCube(dbPath, jobId, auto = TRUE)
+  }
 }
 
 
@@ -257,9 +289,9 @@ startScoresHtml <- function(dbPath) {
     startComp(
       rlang::expr_text(rlang::expr(
         DEEBeval::runScoreHtml(!!dbPath, !!model))),
-    prefix = paste0("DEEBeval-scoresHtml-", model),
-    timeInMinutes = 60,
-    mail = TRUE)
+      prefix = paste0("DEEBeval-scoresHtml-", model),
+      timeInMinutes = 60,
+      mail = TRUE)
   }
 }
 
@@ -268,17 +300,27 @@ startSummary <- function(dbPath) {
   startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::createSummary(!!dbPath))),
-  prefix = "DEEBeval-summary",
-  timeInMinutes = 60,
-  mail = TRUE)
+    prefix = "DEEBeval-summary",
+    timeInMinutes = 60,
+    mail = TRUE)
 }
 
 
-startGenCube <- function(dbPath) {
-  startComp(
+startGenCube <- function(dbPath, startAfterJobIds = NULL, startEstim = FALSE) {
+  jobId <- startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::generateBestHyperCube(!!dbPath))),
-  prefix = "DEEBeval-genCube",
-  timeInMinutes = 60,
-  mail = TRUE)
+    prefix = "DEEBeval-genCube",
+    timeInMinutes = 2,
+    mail = TRUE,
+    startAfterJobIds = startAfterJobIds)
+  if (startEstim) {
+    startComp(
+      rlang::expr_text(rlang::expr(
+        DEEBcmd::interactAutoHyper(!!dbPath, auto = TRUE))),
+      prefix = "DEEBcmd-auto",
+      timeInMinutes = 2,
+      mail = FALSE,
+      startAfterJobIds = jobId)
+  }
 }

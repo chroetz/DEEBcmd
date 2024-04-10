@@ -2,10 +2,14 @@ startEstimHyper <- function(
   dbPath,
   methodTable,
   truthNrFilter,
-  forceOverwrite = FALSE
+  forceOverwrite = FALSE,
+  runSummaryAfter = TRUE,
+  auto = FALSE
 ) {
   nSkipped <- 0
   nStarted <- 0
+
+  jobIds <- numeric()
 
   for (i in seq_len(nrow(methodTable))) {
 
@@ -36,12 +40,11 @@ startEstimHyper <- function(
         cat("All results seem to exist. Skipping.\n")
         nSkipped <- nSkipped + 1
         next
-      } else {
-        cat(length(openTruthNrs), "new. Starting Job.\n")
-        nStarted <- nStarted + 1
       }
+      cat(length(openTruthNrs), "new. Starting Job.\n")
+      nStarted <- nStarted + 1
       methodBase <- basename(methodInfo$method)
-      startComp(
+      jobId <- startComp(
         rlang::expr_text(rlang::expr(
           DEEBesti::runOne(
             dbPath = !!dbPath,
@@ -58,8 +61,14 @@ startEstimHyper <- function(
         },
         timeInMinutes = if(is.null(methodInfo$timeInMinutes)) 10 else methodInfo$timeInMinutes,
         mail = FALSE)
+      jobIds <- c(jobIds, jobId)
     }
   }
 
   cat("Started", nStarted, "jobs and skipped", nSkipped, "Jobs.\n")
+
+  if (runSummaryAfter && nStarted > 0) {
+    startNewEval(dbPath, startAfterJobIds = jobIds, auto = auto)
+  }
+
 }

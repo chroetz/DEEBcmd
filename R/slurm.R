@@ -1,10 +1,10 @@
 #' @export
-startComp <- function(cmdStr, prefix="DEEB", timeInMinutes = NULL, mail=TRUE) {
+startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, mail=TRUE, startAfterJobIds=NULL) {
   if (isSlurmAvailable()) {
     jobName <- paste0(prefix, "_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
     cat("Starting SLURM job", jobName, "\n")
     if (!dir.exists("_log")) dir.create("_log")
-    clcom <- paste0(
+    command <- paste0(
       "sbatch ",
       " --qos=short",
       " --job-name=", jobName,
@@ -12,9 +12,12 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes = NULL, mail=TRUE) {
       " --error=_log/", jobName, "_%j.err",
       if (mail) " --mail-type=END",
       if (!is.null(timeInMinutes)) " --time=", timeInMinutes,
+      if (length(startAfterJobIds) > 0) paste0(" --dependency=afterany:", paste(startAfterJobIds, collapse=":")),
       " --wrap=\"Rscript -e '", gsub("\"", "\\\\\"", cmdStr), "'\"")
-    cat(clcom, "\n")
-    system(clcom)
+    cat(command, "\n")
+    output <- system(command, intern = TRUE)
+    jobId <- extractJobId(output)
+    return(jobId)
   } else {
     cat("Evaluating following R expression:\n", cmdStr, "\n", sep="")
     eval(rlang::parse_expr(cmdStr))
@@ -23,4 +26,12 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes = NULL, mail=TRUE) {
 
 isSlurmAvailable <- function() {
   return(suppressWarnings(system2("srun", stdout = FALSE, stderr = FALSE) != 127))
+}
+
+extractJobId <- function(x) {
+  if (startsWith(x, "Submitted batch job ")) {
+    return(as.numeric(substring(x, 21)))
+  } else {
+    return(NA)
+  }
 }
