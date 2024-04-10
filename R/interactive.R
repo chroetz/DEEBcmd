@@ -27,7 +27,8 @@ askUserWhatToEval <- function(dbPath = ".") {
       "evalAllSumm" = "DEEBeval: all, no plots, no scoreHTML, summary",
       "onlyScores" = "DEEBeval: all, no plots, no scoreHTML, no summary",
       "onlyScoreHtml" = "DEEBeval: only scoreHTML",
-      "onlySummary" = "DEEBeval: only summary"
+      "onlySummary" = "DEEBeval: only summary",
+      "genCube" = "DEEBeval: generate best hypercube"
     ))
 
   switch(
@@ -42,6 +43,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     onlyScores = startEvaluation(dbPath, FALSE, FALSE, FALSE),
     onlyScoreHtml = startScoresHtml(dbPath),
     onlySummary = startSummary(dbPath),
+    genCube = startGenCube(dbPath),
     stop("Choice not implemented."))
 }
 
@@ -267,6 +269,16 @@ startSummary <- function(dbPath) {
     rlang::expr_text(rlang::expr(
       DEEBeval::createSummary(!!dbPath))),
   prefix = "DEEBeval-summary",
+  timeInMinutes = 60,
+  mail = TRUE)
+}
+
+
+startGenCube <- function(dbPath) {
+  startComp(
+    rlang::expr_text(rlang::expr(
+      DEEBeval::generateBestHyperCube(!!dbPath))),
+  prefix = "DEEBeval-genCube",
   timeInMinutes = 60,
   mail = TRUE)
 }
