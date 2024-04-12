@@ -3,13 +3,14 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, mail=TRUE, star
   if (isSlurmAvailable()) {
     jobName <- paste0(prefix, "_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
     cat("Starting SLURM job", jobName, "\n")
-    if (!dir.exists("_log")) dir.create("_log")
+    logDir <- DEEBpath::getLogDir(NULL, relative=TRUE)
+    if (!dir.exists(logDir)) dir.create(logDir, recursive=TRUE, showWarnings=FALSE)
     command <- paste0(
       "sbatch ",
       " --qos=short",
       " --job-name=", jobName,
-      " --output=_log/", jobName, "_%j.out",
-      " --error=_log/", jobName, "_%j.err",
+      " --output=",logDir, "/", jobName, "_%j.out",
+      " --error=",logDir, "/", jobName, "_%j.err",
       if (mail) " --mail-type=END",
       if (!is.null(timeInMinutes)) " --time=", timeInMinutes,
       if (length(startAfterJobIds) > 0) paste0(" --dependency=afterany:", paste(startAfterJobIds, collapse=":")),

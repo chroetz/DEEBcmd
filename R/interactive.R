@@ -29,7 +29,8 @@ askUserWhatToEval <- function(dbPath = ".") {
       "onlyScores" = "DEEBeval: all, no plots, no scoreHTML, no summary",
       "onlyScoreHtml" = "DEEBeval: only scoreHTML",
       "onlySummary" = "DEEBeval: only summary",
-      "genCube" = "DEEBeval: generate best hypercube"
+      "genCube" = "DEEBeval: generate best hypercube",
+      "clean" = "clean things (choose)",
     ))
 
   switch(
@@ -46,6 +47,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     onlyScoreHtml = startScoresHtml(dbPath),
     onlySummary = startSummary(dbPath),
     genCube = startGenCube(dbPath),
+    clean = startCleanChoose(dbPath),
     stop("Choice not implemented."))
 }
 
@@ -323,4 +325,16 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
       mail = FALSE,
       startAfterJobIds = jobId)
   }
+}
+
+
+startCleanChoose <- function(dbPath) {
+  choice <- getUserInput(
+    "Choose what to clean",
+    c("log" = "log files",
+    ))
+  switch(
+    choice,
+    log = cleanLogDir(dbPath),
+    stop("Choice not implemented."))
 }
