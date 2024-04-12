@@ -30,7 +30,7 @@ askUserWhatToEval <- function(dbPath = ".") {
       "onlyScoreHtml" = "DEEBeval: only scoreHTML",
       "onlySummary" = "DEEBeval: only summary",
       "genCube" = "DEEBeval: generate best hypercube",
-      "clean" = "clean things (choose)",
+      "clean" = "clean things (choose)"
     ))
 
   switch(
@@ -331,8 +331,7 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
 startCleanChoose <- function(dbPath) {
   choice <- getUserInput(
     "Choose what to clean",
-    c("log" = "log files",
-    ))
+    c("log" = "log files"))
   switch(
     choice,
     log = cleanLogDir(dbPath),
