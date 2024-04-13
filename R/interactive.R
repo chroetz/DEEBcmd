@@ -313,7 +313,7 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
     rlang::expr_text(rlang::expr(
       DEEBeval::generateBestHyperCube(!!dbPath))),
     prefix = "DEEBeval-genCube",
-    timeInMinutes = 2,
+    timeInMinutes = 10,
     mail = TRUE,
     startAfterJobIds = startAfterJobIds)
   if (auto) {
@@ -321,7 +321,7 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
       rlang::expr_text(rlang::expr(
         DEEBcmd::interactAutoHyper(!!dbPath, auto = TRUE))),
       prefix = "DEEBcmd-auto",
-      timeInMinutes = 2,
+      timeInMinutes = 60,
       mail = FALSE,
       startAfterJobIds = jobId)
   }
