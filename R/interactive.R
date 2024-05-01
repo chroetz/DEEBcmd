@@ -331,9 +331,13 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
 startCleanChoose <- function(dbPath) {
   choice <- getUserInput(
     "Choose what to clean",
-    c("log" = "log files"))
+    c("log" = "log files",
+      "empty" = "remove empty method dirs",
+      "nonCsv" = "remove method dirs without csv files"))
   switch(
     choice,
+    empty = DEEBpath::removeEmptyMethodFolders(dbPath, FALSE),
+    nonCsv = DEEBpath::removeEmptyMethodFolders(dbPath, TRUE),
     log = cleanLogDir(dbPath),
     stop("Choice not implemented."))
 }
