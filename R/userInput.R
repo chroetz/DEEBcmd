@@ -81,3 +81,42 @@ getLine <- function() {
   }
   return(readLines(withr::local_connection(file("stdin")), n = 1))
 }
+
+
+getUserInputDeebDb <- function(startDir) {
+
+  currentPath <- normalizePath(startDir, winslash="/")
+
+  for (i in seq_len(1e4)) {
+    isCurrentDeebDb <- DEEBpath::isDeebDb(currentPath)
+    isParentDeebDb <- DEEBpath::isDeebDb(dirname(currentPath))
+    currentDirs <- list.dirs(currentPath, recursive=FALSE)
+    isDeebDb <- sapply(currentDirs, DEEBpath::isDeebDb)
+    options <- c(
+      if (isCurrentDeebDb) paste0("SELECT ."),
+      if (isParentDeebDb) paste0("SELECT .."),
+      if (any(isDeebDb)) paste0("SELECT ", basename(currentDirs[isDeebDb])),
+      paste0("ENTER ", basename(currentDirs)),
+      "ENTER ..")
+    choice <- getUserInput(paste0(currentPath, " >> Choose:"),  options)
+    if (startsWith(choice, "ENTER")) {
+      newDir <- substring(choice, 7)
+      if (newDir == "..") {
+        currentPath <- normalizePath(dirname(currentPath), winslash="/")
+      } else {
+        currentPath <- file.path(currentPath, newDir)
+      }
+      next
+    }
+    if (startsWith(choice, "SELECT")) {
+      selectDir <- substring(choice, 8)
+      if (selectDir == ".") return(currentPath)
+      if (selectDir == "..") return(dirname(currentPath))
+      return(file.path(currentPath, selectDir))
+    }
+    stop("Cannot handle choice: ", choice)
+  }
+
+  stop("getUserInputDeebDb loop ended unexpectedly.")
+}
+

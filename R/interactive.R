@@ -30,6 +30,7 @@ askUserWhatToEval <- function(dbPath = ".") {
       "onlyScoreHtml" = "DEEBeval: only scoreHTML",
       "onlySummary" = "DEEBeval: only summary",
       "genCube" = "DEEBeval: generate best hypercube",
+      "copyBest" = "DEEBeval: copyBest",
       "clean" = "clean things (choose)"
     ))
 
@@ -47,6 +48,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     onlyScoreHtml = startScoresHtml(dbPath),
     onlySummary = startSummary(dbPath),
     genCube = startGenCube(dbPath),
+    copyBest = startCopyBest(dbPath),
     clean = startCleanChoose(dbPath),
     stop("Choice not implemented."))
 }
@@ -325,6 +327,13 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
       mail = FALSE,
       startAfterJobIds = jobId)
   }
+}
+
+
+startCopyBest <- function(dbPath) {
+  cat("Choose target DEEB DB:\n")
+  toDbPath <- getUserInputDeebDb(dbPath)
+  DEEBeval::copyBest(dbPath, toDbPath)
 }
 
 
