@@ -118,7 +118,7 @@ interactHyper <- function(dbPath) {
 
 
 #' @export
-interactAutoHyper <- function(dbPath, auto = FALSE) {
+interactAutoHyper <- function(dbPath, auto = FALSE, runLocal = FALSE, parallel = FALSE) {
   if (auto) {
     methodTableNamesChosen <- DEEBpath::getMethodTableNames(dbPath, auto = TRUE)
   } else {
@@ -138,7 +138,9 @@ interactAutoHyper <- function(dbPath, auto = FALSE) {
     truthNrs,
     forceOverwrite = FALSE,
     runSummaryAfter = TRUE,
-    auto = TRUE)
+    auto = TRUE,
+    runLocal = runLocal,
+    parallel = parallel)
   return(invisible())
 }
 
@@ -176,7 +178,7 @@ interactScanEval <- function(dbPath) {
 }
 
 
-startNewEval <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
+startNewEval <- function(dbPath, startAfterJobIds = NULL, auto = FALSE, runLocal = FALSE, parallel = FALSE) {
   jobId <- startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::runEvalTbl(
@@ -194,7 +196,7 @@ startNewEval <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
     startAfterJobIds = startAfterJobIds
   )
   if (auto) {
-    startGenCube(dbPath, jobId, auto = TRUE)
+    startGenCube(dbPath, jobId, auto = TRUE, runLocal = runLocal, parallel = parallel)
   }
 }
 
@@ -310,7 +312,7 @@ startSummary <- function(dbPath) {
 }
 
 
-startGenCube <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
+startGenCube <- function(dbPath, startAfterJobIds = NULL, auto = FALSE, runLocal = FALSE, parallel = FALSE) {
   jobId <- startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::generateBestHyperCube(!!dbPath))),
@@ -321,7 +323,7 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, auto = FALSE) {
   if (auto) {
     startComp(
       rlang::expr_text(rlang::expr(
-        DEEBcmd::interactAutoHyper(!!dbPath, auto = TRUE))),
+        DEEBcmd::interactAutoHyper(!!dbPath, auto = TRUE, runLocal = !!runLocal, parallel = !!parallel))),
       prefix = "DEEBcmd-auto",
       timeInMinutes = 60,
       mail = FALSE,

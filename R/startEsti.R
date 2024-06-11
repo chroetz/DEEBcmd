@@ -1,15 +1,68 @@
+#' @export
 startEstimHyper <- function(
   dbPath,
   methodTable,
   truthNrFilter,
   forceOverwrite = FALSE,
   runSummaryAfter = TRUE,
-  auto = FALSE
+  auto = FALSE,
+  runLocal = FALSE,
+  parallel = FALSE
 ) {
-  nSkipped <- 0
-  nStarted <- 0
+
+  jobCollection <- collectJobs(
+    dbPath,
+    methodTable,
+    truthNrFilter,
+    forceOverwrite
+  )
+
+  cat("There are", jobCollection$n, "jobs to do;", jobCollection$nSkipped, "others were skipped.\n")
+
+  if (jobCollection$n == 0) {
+    # TODO: On the first call of HyperParam opti, all first method runs may exist without the optimization being done.
+    cat("Nothing to do.\n")
+    return(invisible())
+  }
 
   jobIds <- numeric()
+
+  if (runLocal) {
+    cat("Run jobs local.\n")
+    evalExpressionList(jobCollection$jobTable$expression, parallel = parallel)
+  } else {
+    cat("Try to use slurm to run jobs.\n")
+    for (i in seq_len(jobCollection$n)) {
+      jobInfo <- jobCollection$jobTable[i, ]
+      jobId <- startComp(
+        rlang::expr_text(jobInfo$expression),
+        prefix = jobInfo$prefix,
+        timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 10,
+        mail = FALSE)
+      jobIds <- c(jobIds, jobId)
+    }
+  }
+
+  if (runSummaryAfter) {
+    startNewEval(dbPath, startAfterJobIds = jobIds, auto = auto, runLocal = runLocal, parallel = parallel)
+  }
+
+  return(invisible())
+}
+
+
+
+collectJobs <- function(
+  dbPath,
+  methodTable,
+  truthNrFilter,
+  forceOverwrite
+) {
+
+  nSkipped <- 0
+  expressionList <- list()
+  methodInfoList <- list()
+  prefixList <- character()
 
   for (i in seq_len(nrow(methodTable))) {
 
@@ -42,10 +95,19 @@ startEstimHyper <- function(
         next
       }
       cat(length(openTruthNrs), "new. Starting Job.\n")
-      nStarted <- nStarted + 1
       methodBase <- basename(methodInfo$method)
-      jobId <- startComp(
-        rlang::expr_text(rlang::expr(
+      methodInfoList <- append(methodInfoList, methodInfo)
+      prefixList <- append(
+        prefixList,
+        if (is.null(expansionNr)) {
+          paste("DEEBesti", methodInfo$model, methodBase, sep="-")
+        } else {
+          paste("DEEBesti", methodInfo$model, methodBase, expansionNr, sep="-")
+        }
+      )
+      expressionList <- append(
+        expressionList,
+        rlang::expr(
           DEEBesti::runOne(
             dbPath = !!dbPath,
             truthNrFilter = !!openTruthNrs,
@@ -53,22 +115,45 @@ startEstimHyper <- function(
             model = !!methodInfo$model,
             method = !!methodInfo$method,
             expansionNr = !!expansionNr)
-        )),
-        prefix = if (is.null(expansionNr)) {
-          paste("DEEBesti", methodInfo$model, methodBase, sep="-")
-        } else {
-          paste("DEEBesti", methodInfo$model, methodBase, expansionNr, sep="-")
-        },
-        timeInMinutes = if(is.null(methodInfo$timeInMinutes)) 10 else methodInfo$timeInMinutes,
-        mail = FALSE)
-      jobIds <- c(jobIds, jobId)
+        )
+      )
     }
   }
 
-  cat("Started", nStarted, "jobs and skipped", nSkipped, "Jobs.\n")
+  jobTable <- tibble::tibble(
+    expression = expressionList,
+    prefix = prefixList) |>
+    dplyr::bind_cols(methodInfo |> dplyr::bind_rows())
 
-  if (runSummaryAfter && nStarted > 0) {
-    startNewEval(dbPath, startAfterJobIds = jobIds, auto = auto)
+  return(lst(
+    jobTable,
+    n = nrow(jobTable),
+    nSkipped))
+}
+
+
+
+evalExpressionList <- function(expressionList, parallel = TRUE, numCores = parallel::detectCores() - 1) {
+
+  if (parallel) {
+    cat("Create cluster of", numCores, "cores to run", length(expressionList), "in parallel.\n")
+    cat("The following expressions will be executed on the parallel cluster:\n")
+    for (expr in expressionList) cat(rlang::expr_text(expr), "\n")
+    cat("Create Cluster.\n")
+    cl <- parallel::makeCluster(numCores)
+    cat("Start execution.\n")
+    results <- parallel::parLapply(cl, expressionList, eval)
+    cat("DOne. Stop Cluster.\n")
+    parallel::stopCluster(cl)
+    return(results)
   }
 
+  cat("Run", length(expressionList), " expressions sequentially.\n")
+  results <- lapply(expressionList, \(expr) {
+    cat("Run following expression:\n")
+    cat(rlang::expr_text(expr), "\n")
+    eval(expr)
+  })
+  cat("Done evalutating expression list.\n")
+  return(results)
 }
