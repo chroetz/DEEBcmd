@@ -83,7 +83,7 @@ collectJobs <- function(
 
     methodInfo <- methodTable[i, ]
     obsNr <- DEEBpath::getObsNrFromName(dbPath, methodInfo$model, methodInfo$obs)
-    hyperParmsPath <- DEEBpath::getMethodFile(dbPath, methodInfo$method)
+    hyperParmsPath <- DEEBpath::getMethodFile(dbPath, methodInfo$methodFile)
     hyperParmsList <- ConfigOpts::readOptsBare(hyperParmsPath)
     if (ConfigOpts::getClassAt(hyperParmsList, 1) == "List") {
       hyperParmsList <- ConfigOpts::expandList(hyperParmsList)
@@ -101,7 +101,7 @@ collectJobs <- function(
           truthNrFilter = truthNrFilter,
           obsNr = obsNr,
           model = methodInfo$model,
-          method = methodInfo$method,
+          methodFile = methodInfo$methodFile,
           expansionNr = expansionNr)
       }
       if (length(openTruthNrs) == 0) {
@@ -109,15 +109,14 @@ collectJobs <- function(
         nSkipped <- nSkipped + 1
         next
       }
-      cat(length(openTruthNrs), "new. Starting Job.\n")
-      methodBase <- basename(methodInfo$method)
-      methodInfoList <- append(methodInfoList, methodInfo)
+      cat(length(openTruthNrs), "new openTruthNrs. Adding job to list.\n")
+      methodInfoList <- c(methodInfoList, list(methodInfo))
       prefixList <- append(
         prefixList,
         if (is.null(expansionNr)) {
-          paste("DEEBesti", methodInfo$model, methodBase, sep="-")
+          paste("DEEBesti", methodInfo$model, methodInfo$method, sep="-")
         } else {
-          paste("DEEBesti", methodInfo$model, methodBase, expansionNr, sep="-")
+          paste("DEEBesti", methodInfo$model, methodInfo$method, expansionNr, sep="-")
         }
       )
       expressionList <- append(
@@ -128,7 +127,7 @@ collectJobs <- function(
             truthNrFilter = !!openTruthNrs,
             obsNr = !!obsNr,
             model = !!methodInfo$model,
-            method = !!methodInfo$method,
+            method = !!methodInfo$methodFile,
             expansionNr = !!expansionNr)
         )
       )
@@ -138,7 +137,7 @@ collectJobs <- function(
   jobTable <- tibble::tibble(
     expression = expressionList,
     prefix = prefixList) |>
-    dplyr::bind_cols(methodInfo |> dplyr::bind_rows())
+    dplyr::bind_cols(methodInfoList |> dplyr::bind_rows())
 
   return(lst(
     jobTable,

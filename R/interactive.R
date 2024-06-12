@@ -87,8 +87,8 @@ interactHyper <- function(dbPath) {
     default = "all")
   methodTable <- methodTable |> dplyr::filter(obs %in% obsNameFilter)
   methodsFilter <- getUserInput(
-    "Choose method(s)",
-    methodTable$method |> unique(),
+    "Choose method file(s)",
+    methodTable$methodFile |> unique(),
     multi = TRUE,
     default = "all")
   methodTable <- methodTable |> dplyr::filter(method %in% methodsFilter)
@@ -103,6 +103,9 @@ interactHyper <- function(dbPath) {
   forceOverwrite <- getUserInputYesNo(
     "Force overwrite?",
     default = "No")
+  runLocalParallel <- getUserInputYesNo(
+    "Run local and in parallel?",
+    default = "No")
   readyToStart <- getUserInputYesNo(
     "Ready to start?",
     default = "Yes")
@@ -111,7 +114,9 @@ interactHyper <- function(dbPath) {
       dbPath,
       methodTable,
       truthNrFilter,
-      forceOverwrite
+      forceOverwrite,
+      runLocal = runLocalParallel,
+      parallel = runLocalParallel
     )
   return(invisible())
 }
