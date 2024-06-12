@@ -7,7 +7,8 @@ startEstimHyper <- function(
   runSummaryAfter = TRUE,
   auto = FALSE,
   runLocal = FALSE,
-  parallel = FALSE
+  parallel = FALSE,
+  isFirstCall = FALSE
 ) {
 
   jobCollection <- collectJobs(
@@ -19,35 +20,49 @@ startEstimHyper <- function(
 
   cat("There are", jobCollection$n, "jobs to do;", jobCollection$nSkipped, "others were skipped.\n")
 
-  if (jobCollection$n == 0) {
-    # TODO: On the first call of HyperParam opti, all first method runs may exist without the optimization being done.
-    cat("Nothing to do.\n")
-    return(invisible())
-  }
-
   jobIds <- numeric()
 
-  if (runLocal) {
-    cat("Run jobs local.\n")
-    evalExpressionList(jobCollection$jobTable$expression, parallel = parallel)
+  if (jobCollection$n == 0) {
+    cat("Nothing to do.\n")
+    if (!isFirstCall) return(invisible())
   } else {
-    cat("Try to use slurm to run jobs.\n")
-    for (i in seq_len(jobCollection$n)) {
-      jobInfo <- jobCollection$jobTable[i, ]
-      jobId <- startComp(
-        rlang::expr_text(jobInfo$expression),
-        prefix = jobInfo$prefix,
-        timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 10,
-        mail = FALSE)
-      jobIds <- c(jobIds, jobId)
+    if (runLocal) {
+      cat("Run jobs local.\n")
+      evalExpressionList(jobCollection$jobTable$expression, parallel = parallel)
+    } else {
+      cat("Try to use slurm to run jobs.\n")
+      for (i in seq_len(jobCollection$n)) {
+        jobInfo <- jobCollection$jobTable[i, ]
+        jobId <- startComp(
+          rlang::expr_text(jobInfo$expression),
+          prefix = jobInfo$prefix,
+          timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 10,
+          mail = FALSE)
+        jobIds <- c(jobIds, jobId)
+      }
     }
   }
 
   if (runSummaryAfter) {
-    startNewEval(dbPath, startAfterJobIds = jobIds, auto = auto, runLocal = runLocal, parallel = parallel)
+    jobIds <- startNewEval(dbPath, startAfterJobIds = jobIds)
   }
 
-  return(invisible())
+  if (auto) {
+    methods <- methodTable$method |> unique()
+    jobIds <- startGenCube(dbPath, jobIds, methods)
+
+    cmdText <-  rlang::expr_text(rlang::expr(
+      DEEBcmd::interactAutoHyper(!!dbPath, auto = TRUE, runLocal = !!runLocal, parallel = !!parallel, isFirstCall = FALSE)
+    ))
+    jobIds <- startComp(
+      cmdText,
+      prefix = "DEEBcmd-auto",
+      timeInMinutes = 60,
+      mail = FALSE,
+      startAfterJobIds = jobIds)
+  }
+
+  return(jobIds)
 }
 
 
