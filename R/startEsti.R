@@ -155,9 +155,9 @@ evalExpressionList <- function(expressionList, parallel = TRUE, numCores = paral
     for (expr in expressionList) cat(rlang::expr_text(expr), "\n")
     cat("Create Cluster.\n")
     cl <- parallel::makeCluster(numCores)
-    cat("Start execution.\n")
-    results <- parallel::parLapply(cl, expressionList, eval)
-    cat("DOne. Stop Cluster.\n")
+    cat("Start execution on cluster with ", numCores, "cores.\n")
+    results <- parallel::clusterApplyLB(cl, expressionList, eval)
+    cat("Done. Stop Cluster.\n")
     parallel::stopCluster(cl)
     return(results)
   }
