@@ -191,7 +191,7 @@ interactScanEval <- function(dbPath) {
 }
 
 
-startNewEval <- function(dbPath, startAfterJobIds = NULL, render = TRUE) {
+startNewEval <- function(dbPath, startAfterJobIds = NULL, onlySummarizeScore = FALSE) {
   jobId <- startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::runEvalTbl(
@@ -201,7 +201,7 @@ startNewEval <- function(dbPath, startAfterJobIds = NULL, render = TRUE) {
         writeScoreHtml = FALSE,
         createSummary = TRUE,
         verbose = FALSE,
-        renderSummary = !!render
+        onlySummarizeScore = !!onlySummarizeScore
       )
     )),
     prefix = "DEEBeval-runEvalTbl-all",
