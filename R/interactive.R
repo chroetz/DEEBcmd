@@ -42,9 +42,9 @@ askUserWhatToEval <- function(dbPath = ".") {
     scan = interactScanEval(dbPath),
     scanRun = startNewEval(dbPath),
     choose = interactChoose(dbPath),
-    evalAll = startEvaluation(dbPath, FALSE, TRUE, TRUE),
-    evalAllSumm = startEvaluation(dbPath, FALSE, FALSE, TRUE),
-    onlyScores = startEvaluation(dbPath, FALSE, FALSE, FALSE),
+    evalAll = startEvaluation(dbPath, FALSE, TRUE, TRUE, FALSE),
+    evalAllSumm = startEvaluation(dbPath, FALSE, FALSE, TRUE, FALSE),
+    onlyScores = startEvaluation(dbPath, FALSE, FALSE, FALSE, FALSE),
     onlyScoreHtml = startScoresHtml(dbPath),
     onlySummary = startSummary(dbPath),
     genCube = startGenCube(dbPath),
@@ -168,6 +168,9 @@ interactScanEval <- function(dbPath) {
   createSummary <- getUserInputYesNo(
     "Should summary be created?",
     default = "Yes")
+  onlySummarizeScore <- getUserInputYesNo(
+    "onlySummarizeScore?",
+    default = "No")
   readyToStart <- getUserInputYesNo(
     "Ready to start?",
     default = "Yes")
@@ -180,6 +183,7 @@ interactScanEval <- function(dbPath) {
           createPlots = !!createPlots,
           writeScoreHtml = !!writeScoreHtml,
           createSummary = !!createSummary,
+          onlySummarizeScore = !!onlySummarizeScore,
           verbose = FALSE
         )
       )),
@@ -255,6 +259,9 @@ interactChoose <- function(dbPath) {
   createSummary <- getUserInputYesNo(
     "Should summary be created?",
     default = "Yes")
+  onlySummarizeScore <- getUserInputYesNo(
+    "onlySummarizeScore?",
+    default = "No")
   readyToStart <- getUserInputYesNo(
     "Ready to start?",
     default = "Yes")
@@ -272,6 +279,7 @@ interactChoose <- function(dbPath) {
           createPlots = !!createPlots,
           writeScoreHtml = !!writeScoreHtml,
           createSummary = !!createSummary,
+          onlySummarizeScore = !!onlySummarizeScore,
           verbose = FALSE
         )
       )),
@@ -282,7 +290,7 @@ interactChoose <- function(dbPath) {
   }
 }
 
-startEvaluation <- function(dbPath, createPlots, writeScoreHtml, createSummary) {
+startEvaluation <- function(dbPath, createPlots, writeScoreHtml, createSummary, onlySummarizeScore) {
   models <- DEEBpath::getModels(dbPath)
   startComp(
     rlang::expr_text(rlang::expr(
@@ -292,6 +300,7 @@ startEvaluation <- function(dbPath, createPlots, writeScoreHtml, createSummary) 
         createPlots = !!createPlots,
         writeScoreHtml = !!writeScoreHtml,
         createSummary = !!createSummary,
+        onlySummarizeScore = !!onlySummarizeScore,
         verbose = FALSE
       )
     )),
