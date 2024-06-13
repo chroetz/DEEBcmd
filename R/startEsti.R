@@ -44,7 +44,7 @@ startEstimHyper <- function(
   }
 
   if (runSummaryAfter) {
-    jobIds <- startNewEval(dbPath, startAfterJobIds = jobIds)
+    jobIds <- startNewEval(dbPath, startAfterJobIds = jobIds, render = !auto)
   }
 
   if (auto) {

@@ -191,7 +191,7 @@ interactScanEval <- function(dbPath) {
 }
 
 
-startNewEval <- function(dbPath, startAfterJobIds = NULL) {
+startNewEval <- function(dbPath, startAfterJobIds = NULL, render = TRUE) {
   jobId <- startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::runEvalTbl(
@@ -200,7 +200,8 @@ startNewEval <- function(dbPath, startAfterJobIds = NULL) {
         createPlots = FALSE,
         writeScoreHtml = FALSE,
         createSummary = TRUE,
-        verbose = FALSE
+        verbose = FALSE,
+        renderSummary = !!render
       )
     )),
     prefix = "DEEBeval-runEvalTbl-all",
