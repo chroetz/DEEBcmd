@@ -1,5 +1,5 @@
 #' @export
-startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, mail=TRUE, startAfterJobIds=NULL) {
+startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail=TRUE, startAfterJobIds=NULL) {
   if (isSlurmAvailable()) {
     jobName <- paste0(prefix, "_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
     cat("Starting SLURM job", jobName, "\n")
@@ -12,7 +12,8 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, mail=TRUE, star
       " --output=",logDir, "/", jobName, "_%j.out",
       " --error=",logDir, "/", jobName, "_%j.err",
       if (mail) " --mail-type=END",
-      if (!is.null(timeInMinutes)) " --time=", timeInMinutes,
+      if (hasValue(timeInMinutes)) " --time=", timeInMinutes,
+      if (hasValue(nCpus)) " --cpus-per-task=", nCpus,
       if (length(startAfterJobIds) > 0) paste0(" --dependency=afterany:", paste(startAfterJobIds, collapse=":")),
       " --wrap=\"Rscript -e '", gsub("\"", "\\\\\"", cmdStr), "'\"")
     cat(command, "\n")
@@ -20,7 +21,7 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, mail=TRUE, star
     jobId <- extractJobId(output)
     return(jobId)
   } else {
-    cat("Evaluating following R expression:\n", cmdStr, "\n", sep="")
+    cat("No slurm. Evaluating following R expression directly:\n", cmdStr, "\n", sep="")
     eval(rlang::parse_expr(cmdStr))
   }
 }

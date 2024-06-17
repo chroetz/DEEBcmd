@@ -68,30 +68,31 @@ startCopyTruth <- function(dbPath) {
 interactHyper <- function(dbPath) {
   cat("Scaning for possible choices...\n")
   methodTableNamesAll <- DEEBpath::getMethodTableNames(dbPath)
-  methodTableNamesChosen <- getUserInput(
+  methodTableNamesChosenName <- getUserInput(
     "Choose method tables(s)",
-    methodTableNamesAll,
+    names(methodTableNamesAll),
     multi = TRUE,
     default = "all")
+  methodTableNamesChosen <- methodTableNamesAll[methodTableNamesChosenName]
   methodTable <- DEEBpath::getMethodTable(dbPath, methodTableNamesChosen)
   modelFilter <- getUserInput(
     "Choose model(s)",
     methodTable$model |> unique(),
     multi = TRUE,
     default = "all")
-  methodTable <- methodTable |> dplyr::filter(model %in% modelFilter)
+  methodTable <- methodTable |> dplyr::filter(.data$model %in% modelFilter)
   obsNameFilter <- getUserInput(
     "Choose obs",
     methodTable$obs |> unique(),
     multi = TRUE,
     default = "all")
-  methodTable <- methodTable |> dplyr::filter(obs %in% obsNameFilter)
+  methodTable <- methodTable |> dplyr::filter(.data$obs %in% obsNameFilter)
   methodsFilter <- getUserInput(
     "Choose method file(s)",
     methodTable$methodFile |> unique(),
     multi = TRUE,
     default = "all")
-  methodTable <- methodTable |> dplyr::filter(method %in% methodsFilter)
+  methodTable <- methodTable |> dplyr::filter(.data$method %in% methodsFilter)
   truthNrs <- DEEBpath::getUniqueTruthNrs(
     dbPath,
     modelFilter = modelFilter)
@@ -123,17 +124,19 @@ interactHyper <- function(dbPath) {
 
 
 #' @export
-interactAutoHyper <- function(dbPath, auto = FALSE, runLocal = FALSE, parallel = FALSE, isFirstCall = TRUE) {
-  if (auto) {
-    methodTableNamesChosen <- DEEBpath::getMethodTableNames(dbPath, auto = TRUE)
+interactAutoHyper <- function(dbPath, runLocal = FALSE, parallel = FALSE, autoId = NULL) {
+  if (hasValue(autoId)) {
+    methodTablePaths <- DEEBpath::getMethodTableNames(dbPath, autoId = autoId)
   } else {
+    autoId <- DEEBpath::newAutoId(dbPath)
     cat("Scaning for possible choices...\n")
-    methodTableNamesAll <- DEEBpath::getMethodTableNames(dbPath)
-    methodTableNamesChosen <- getUserInput(
+    methodTablePathsAll <- DEEBpath::getMethodTableNames(dbPath)
+    methodTablePathsNames <- getUserInput(
       "Choose method tables(s)",
-      methodTableNamesAll,
+      names(methodTablePathsAll),
       multi = TRUE,
       default = "all")
+    methodTablePaths <- methodTablePathsAll[methodTablePathsNames]
     if (isSlurmAvailable()) {
       runLocal <- FALSE
       parallel <- FALSE
@@ -141,19 +144,26 @@ interactAutoHyper <- function(dbPath, auto = FALSE, runLocal = FALSE, parallel =
       runLocal <- TRUE
       parallel <- getUserInputYesNo("parallel?", "Yes")
     }
+
+    DEEBpath::initializeAuto(dbPath, methodTablePaths, autoId = autoId)
   }
-  methodTable <- DEEBpath::getMethodTable(dbPath, methodTableNamesChosen)
+
+  if (length(methodTablePaths) == 0) {
+    stop("Did not find any method table name.")
+  }
+
+  methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths)
   truthNrs <- DEEBpath::getUniqueTruthNrs(dbPath)
+
   startEstimHyper(
     dbPath,
     methodTable,
     truthNrs,
     forceOverwrite = FALSE,
     runSummaryAfter = TRUE,
-    auto = TRUE,
+    autoId = autoId,
     runLocal = runLocal,
-    parallel = parallel,
-    isFirstCall = isFirstCall)
+    parallel = parallel)
   return(invisible())
 }
 
@@ -195,21 +205,44 @@ interactScanEval <- function(dbPath) {
 }
 
 
-startNewEval <- function(dbPath, startAfterJobIds = NULL, onlySummarizeScore = FALSE) {
+startNewEval <- function(dbPath, startAfterJobIds = NULL) {
   jobId <- startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::runEvalTbl(
         !!dbPath,
-        DEEBpath::getNew(!!dbPath),
+        DEEBpath::getNew(dbPath = !!dbPath),
         createPlots = FALSE,
         writeScoreHtml = FALSE,
         createSummary = TRUE,
         verbose = FALSE,
-        onlySummarizeScore = !!onlySummarizeScore
+        onlySummarizeScore = FALSE
       )
     )),
     prefix = "DEEBeval-runEvalTbl-all",
-    timeInMinutes = 120,
+    timeInMinutes = 200,
+    mail = TRUE,
+    startAfterJobIds = startAfterJobIds
+  )
+  return(jobId)
+}
+
+
+startNewEvalAuto <- function(dbPath, startAfterJobIds = NULL, autoId = NULL, autoRound = NULL) {
+  cmd <- rlang::expr_text(rlang::expr(
+      DEEBeval::runEvalTbl(
+        !!dbPath,
+        DEEBpath::getNewAuto(!!dbPath, autoId = !!autoId, autoRound = !!autoRound),
+        createPlots = FALSE,
+        writeScoreHtml = FALSE,
+        createSummary = FALSE,
+        verbose = FALSE,
+        onlySummarizeScore = TRUE
+      )
+    ))
+  jobId <- startComp(
+    cmd,
+    prefix = "DEEBeval-runEvalTbl-all",
+    timeInMinutes = 200,
     mail = TRUE,
     startAfterJobIds = startAfterJobIds
   )
@@ -290,6 +323,7 @@ interactChoose <- function(dbPath) {
   }
 }
 
+
 startEvaluation <- function(dbPath, createPlots, writeScoreHtml, createSummary, onlySummarizeScore) {
   models <- DEEBpath::getModels(dbPath)
   startComp(
@@ -333,10 +367,16 @@ startSummary <- function(dbPath) {
 }
 
 
-startGenCube <- function(dbPath, startAfterJobIds = NULL, methods = NULL) {
+startGenCube <- function(dbPath, startAfterJobIds = NULL, methodTable = NULL, autoId = NULL) {
+  if (hasValue(methodTable)) {
+    filePath <- tempfile(pattern = "methodsTable", tmpdir = DEEBpath::autoIdDir(dbPath, autoId), fileext = ".csv")
+    readr::write_csv(methodTable, filePath)
+  } else {
+    filePath <- NULL
+  }
   jobId <- startComp(
     rlang::expr_text(rlang::expr(
-      DEEBeval::generateBestHyperCube(!!dbPath, !!methods))),
+      DEEBeval::generateBestHyperCube(!!dbPath, !!filePath, !!autoId))),
     prefix = "DEEBeval-genCube",
     timeInMinutes = 10,
     mail = TRUE,

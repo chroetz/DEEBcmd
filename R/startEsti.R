@@ -5,11 +5,12 @@ startEstimHyper <- function(
   truthNrFilter,
   forceOverwrite = FALSE,
   runSummaryAfter = TRUE,
-  auto = FALSE,
+  autoId = NULL,
   runLocal = FALSE,
-  parallel = FALSE,
-  isFirstCall = FALSE
+  parallel = FALSE
 ) {
+
+  isFirstCall <- DEEBpath::isFirstAutoCall(dbPath, autoId)
 
   jobCollection <- collectJobs(
     dbPath,
@@ -20,11 +21,26 @@ startEstimHyper <- function(
 
   cat("There are", jobCollection$n, "jobs to do;", jobCollection$nSkipped, "others were skipped.\n")
 
+  if (jobCollection$nSkipped + jobCollection$n == 0) {
+    cat("No jobs at all. Stopping.\n")
+    return(invisible())
+  }
+
+  if (hasValue(autoId) && jobCollection$n > 0) {
+      autoRound <- DEEBpath::addToPastJobs(dbPath, autoId, jobCollection$jobTable)
+    } else {
+      autoRound <- NULL
+    }
+
   jobIds <- numeric()
 
   if (jobCollection$n == 0) {
     cat("Nothing to do.\n")
-    if (!isFirstCall) return(invisible())
+    if (isFirstCall) {
+      cat("But is first call. So may need to check for best.\n")
+    } else {
+      return(invisible())
+    }
   } else {
     if (runLocal) {
       cat("Run jobs local.\n")
@@ -36,7 +52,8 @@ startEstimHyper <- function(
         jobId <- startComp(
           rlang::expr_text(jobInfo$expression),
           prefix = jobInfo$prefix,
-          timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 10,
+          timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 60,
+          nCpus = if(hasValue(jobInfo$nCpus)) jobInfo$nCpus else 1,
           mail = FALSE)
         jobIds <- c(jobIds, jobId)
       }
@@ -44,15 +61,18 @@ startEstimHyper <- function(
   }
 
   if (runSummaryAfter) {
-    jobIds <- startNewEval(dbPath, startAfterJobIds = jobIds, onlySummarizeScore = auto)
+    if (hasValue(autoId)) {
+      jobIds <- startNewEvalAuto(dbPath, startAfterJobIds = jobIds, autoId = autoId, autoRound = autoRound)
+    } else {
+      jobIds <- startNewEval(dbPath, startAfterJobIds = jobIds)
+    }
   }
 
-  if (auto) {
-    methods <- methodTable$method |> unique()
-    jobIds <- startGenCube(dbPath, jobIds, methods)
+  if (hasValue(autoId)) {
+    jobIds <- startGenCube(dbPath, jobIds, methodTable, autoId = autoId)
 
     cmdText <-  rlang::expr_text(rlang::expr(
-      DEEBcmd::interactAutoHyper(!!dbPath, auto = TRUE, runLocal = !!runLocal, parallel = !!parallel, isFirstCall = FALSE)
+      DEEBcmd::interactAutoHyper(!!dbPath, autoId = !!autoId, runLocal = !!runLocal, parallel = !!parallel)
     ))
     jobIds <- startComp(
       cmdText,
@@ -75,24 +95,26 @@ collectJobs <- function(
 ) {
 
   nSkipped <- 0
-  expressionList <- list()
-  methodInfoList <- list()
-  prefixList <- character()
+
+  jobTable <- dplyr::bind_cols(
+    dplyr::tibble(
+      methodName = character(),
+      expansionNr = integer(),
+      expression = list(),
+      prefix = character(),
+      obsNr = integer()
+    ),
+    methodTable[0,]
+  )
 
   for (i in seq_len(nrow(methodTable))) {
 
     methodInfo <- methodTable[i, ]
     obsNr <- DEEBpath::getObsNrFromName(dbPath, methodInfo$model, methodInfo$obs)
-    hyperParmsPath <- DEEBpath::getMethodFile(dbPath, methodInfo$methodFile)
-    hyperParmsList <- ConfigOpts::readOptsBare(hyperParmsPath)
-    if (ConfigOpts::getClassAt(hyperParmsList, 1) == "List") {
-      hyperParmsList <- ConfigOpts::expandList(hyperParmsList)
-      expansionNrList <- seq_along(hyperParmsList$list)
-    } else {
-      expansionNrList <- list(NULL)
-    }
-
-    for (expansionNr in expansionNrList) {
+    hyperParmsList <- DEEBesti::loadAsHyperParmsList(dbPath, methodInfo$methodFile)
+    for (expansionNr in seq_along(hyperParmsList$list)) {
+      hyperParms <- hyperParmsList$list[[expansionNr]]
+      cat(hyperParms$name, ": ", sep="")
       if (forceOverwrite) {
         openTruthNrs <- truthNrFilter
       } else {
@@ -101,8 +123,7 @@ collectJobs <- function(
           truthNrFilter = truthNrFilter,
           obsNr = obsNr,
           model = methodInfo$model,
-          methodFile = methodInfo$methodFile,
-          expansionNr = expansionNr)
+          methodName = hyperParms$name)
       }
       if (length(openTruthNrs) == 0) {
         cat("All results seem to exist. Skipping.\n")
@@ -110,18 +131,7 @@ collectJobs <- function(
         next
       }
       cat(length(openTruthNrs), "new openTruthNrs. Adding job to list.\n")
-      methodInfoList <- c(methodInfoList, list(methodInfo))
-      prefixList <- append(
-        prefixList,
-        if (is.null(expansionNr)) {
-          paste("DEEBesti", methodInfo$model, methodInfo$method, sep="-")
-        } else {
-          paste("DEEBesti", methodInfo$model, methodInfo$method, expansionNr, sep="-")
-        }
-      )
-      expressionList <- append(
-        expressionList,
-        rlang::expr(
+      expr <- rlang::expr(
           DEEBesti::runOne(
             dbPath = !!dbPath,
             truthNrFilter = !!openTruthNrs,
@@ -130,14 +140,24 @@ collectJobs <- function(
             method = !!methodInfo$methodFile,
             expansionNr = !!expansionNr)
         )
-      )
+      prefix <- if (is.null(expansionNr)) {
+          paste("DEEBesti", methodInfo$model, methodInfo$methodFile, sep="-")
+        } else {
+          paste("DEEBesti", methodInfo$model, methodInfo$methodFile, expansionNr, sep="-")
+        }
+      jobTable <- dplyr::bind_rows(
+        jobTable,
+        dplyr::bind_cols(
+          dplyr::tibble(
+            methodName = hyperParms$name,
+            expansionNr = expansionNr,
+            expression = list(expr),
+            prefix = prefix,
+            obsNr = obsNr
+          ),
+          methodInfo))
     }
   }
-
-  jobTable <- tibble::tibble(
-    expression = expressionList,
-    prefix = prefixList) |>
-    dplyr::bind_cols(methodInfoList |> dplyr::bind_rows())
 
   return(lst(
     jobTable,
@@ -150,14 +170,16 @@ collectJobs <- function(
 evalExpressionList <- function(expressionList, parallel = TRUE, numCores = parallel::detectCores() - 1) {
 
   if (parallel) {
+    numCores <- pmin(numCores, length(expressionList))
     cat("Create cluster of", numCores, "cores to run", length(expressionList), "in parallel.\n")
     cat("The following expressions will be executed on the parallel cluster:\n")
     for (expr in expressionList) cat(rlang::expr_text(expr), "\n")
     cat("Create Cluster.\n")
     cl <- parallel::makeCluster(numCores)
-    cat("Start execution on cluster with ", numCores, "cores.\n")
+    cat("Start execution of", length(expressionList), "expressions on cluster with", numCores, "cores.\n")
+    pt <- proc.time()
     results <- parallel::clusterApplyLB(cl, expressionList, eval)
-    cat("Done. Stop Cluster.\n")
+    cat("Done after", (proc.time()-pt)[3], "s. Stop Cluster.\n")
     parallel::stopCluster(cl)
     return(results)
   }
