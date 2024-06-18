@@ -10,7 +10,11 @@ startEstimHyper <- function(
   parallel = FALSE
 ) {
 
-  isFirstCall <- DEEBpath::isFirstAutoCall(dbPath, autoId)
+  if (hasValue(autoId)) {
+    isFirstCall <- DEEBpath::isFirstAutoCall(dbPath, autoId)
+  } else {
+    isFirstCall <- FALSE
+  }
 
   jobCollection <- collectJobs(
     dbPath,
