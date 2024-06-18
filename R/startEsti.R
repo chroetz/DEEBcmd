@@ -166,6 +166,12 @@ collectJobs <- function(
 }
 
 
+evalSave <- function(expr) {
+  tryCatch(
+    eval(expr),
+    error = function(cond) cond)
+}
+
 
 evalExpressionList <- function(expressionList, parallel = TRUE, numCores = parallel::detectCores() - 1) {
 
@@ -178,9 +184,18 @@ evalExpressionList <- function(expressionList, parallel = TRUE, numCores = paral
     cl <- parallel::makeCluster(numCores)
     cat("Start execution of", length(expressionList), "expressions on cluster with", numCores, "cores.\n")
     pt <- proc.time()
-    results <- parallel::clusterApplyLB(cl, expressionList, eval)
+    results <- parallel::clusterApplyLB(cl, expressionList, evalSave)
     cat("Done after", (proc.time()-pt)[3], "s. Stop Cluster.\n")
     parallel::stopCluster(cl)
+    errorDetected <- FALSE
+    lapply(seq_along(results), \(i) {
+      r <- results[[i]]
+      if (inherits(r, c("error", "condition"))) {
+        cat("ERROR:", r$message, "\n")
+        errorDetected <- TRUE
+      }
+    })
+    if (errorDetected) stop()
     return(results)
   }
 
@@ -188,7 +203,10 @@ evalExpressionList <- function(expressionList, parallel = TRUE, numCores = paral
   results <- lapply(expressionList, \(expr) {
     cat("Run following expression:\n")
     cat(rlang::expr_text(expr), "\n")
-    eval(expr)
+    res <- evalSave(expr)
+    if (inherits(res, c("error", "condition"))) {
+      cat("ERROR:", res$message, "\n")
+    }
   })
   cat("Done evalutating expression list.\n")
   return(results)

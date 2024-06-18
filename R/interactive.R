@@ -92,7 +92,7 @@ interactHyper <- function(dbPath) {
     methodTable$methodFile |> unique(),
     multi = TRUE,
     default = "all")
-  methodTable <- methodTable |> dplyr::filter(.data$method %in% methodsFilter)
+  methodTable <- methodTable |> dplyr::filter(.data$methodFile %in% methodsFilter)
   truthNrs <- DEEBpath::getUniqueTruthNrs(
     dbPath,
     modelFilter = modelFilter)
