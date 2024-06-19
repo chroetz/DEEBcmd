@@ -54,7 +54,7 @@ startEstimHyper <- function(
       for (i in seq_len(jobCollection$n)) {
         jobInfo <- jobCollection$jobTable[i, ]
         jobId <- startComp(
-          rlang::expr_text(jobInfo$expression),
+          rlang::expr_text(jobInfo$expression[[1]]),
           prefix = jobInfo$prefix,
           timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 60,
           nCpus = if(hasValue(jobInfo$nCpus)) jobInfo$nCpus else 1,
@@ -145,9 +145,9 @@ collectJobs <- function(
             expansionNr = !!expansionNr)
         )
       prefix <- if (is.null(expansionNr)) {
-          paste("DEEBesti", methodInfo$model, methodInfo$methodFile, sep="-")
+          paste("DEEBesti", methodInfo$model, basename(methodInfo$methodFile), sep="-")
         } else {
-          paste("DEEBesti", methodInfo$model, methodInfo$methodFile, expansionNr, sep="-")
+          paste("DEEBesti", methodInfo$model, basename(methodInfo$methodFile), expansionNr, sep="-")
         }
       jobTable <- dplyr::bind_rows(
         jobTable,
