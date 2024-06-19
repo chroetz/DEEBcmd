@@ -16,11 +16,13 @@ startEstimHyper <- function(
     isFirstCall <- FALSE
   }
 
+  pastJobs <- if (hasValue(autoId)) DEEBpath::getPastJobs(dbPath, autoId) else NULL
   jobCollection <- collectJobs(
     dbPath,
     methodTable,
     truthNrFilter,
-    forceOverwrite
+    forceOverwrite,
+    pastJobs
   )
 
   cat("There are", jobCollection$n, "jobs to do;", jobCollection$nSkipped, "others were skipped.\n")
@@ -95,7 +97,8 @@ collectJobs <- function(
   dbPath,
   methodTable,
   truthNrFilter,
-  forceOverwrite
+  forceOverwrite,
+  pastJobs
 ) {
 
   nSkipped <- 0
@@ -131,6 +134,11 @@ collectJobs <- function(
       }
       if (length(openTruthNrs) == 0) {
         cat("All results seem to exist. Skipping.\n")
+        nSkipped <- nSkipped + 1
+        next
+      }
+      if (NROW(pastJobs) > 0 && hyperParms$name %in% pastJobs$methodName) {
+        cat("Tried this before (and apparently failed). Skipping.\n")
         nSkipped <- nSkipped + 1
         next
       }
