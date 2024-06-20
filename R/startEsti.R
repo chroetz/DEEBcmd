@@ -194,6 +194,7 @@ evalExpressionList <- function(expressionList, parallel = TRUE, numCores = paral
     for (expr in expressionList) cat(rlang::expr_text(expr), "\n")
     cat("Create Cluster.\n")
     cl <- parallel::makeCluster(numCores)
+    cat(format(Sys.time()), "\n")
     cat("Start execution of", length(expressionList), "expressions on cluster with", numCores, "cores.\n")
     pt <- proc.time()
     results <- parallel::clusterApplyLB(cl, expressionList, evalSave)
@@ -213,6 +214,7 @@ evalExpressionList <- function(expressionList, parallel = TRUE, numCores = paral
 
   cat("Run", length(expressionList), " expressions sequentially.\n")
   results <- lapply(expressionList, \(expr) {
+    cat(format(Sys.time()), "\n")
     cat("Run following expression:\n")
     cat(rlang::expr_text(expr), "\n")
     res <- evalSave(expr)
@@ -221,5 +223,6 @@ evalExpressionList <- function(expressionList, parallel = TRUE, numCores = paral
     }
   })
   cat("Done evalutating expression list.\n")
+  cat(format(Sys.time()), "\n")
   return(results)
 }

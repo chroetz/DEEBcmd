@@ -1,5 +1,6 @@
 #' @export
 startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail=TRUE, startAfterJobIds=NULL) {
+  cat("startComp():", format(Sys.time()), "\n")
   if (isSlurmAvailable()) {
     jobName <- paste0(prefix, "_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
     cat("Starting SLURM job", jobName, "\n")
