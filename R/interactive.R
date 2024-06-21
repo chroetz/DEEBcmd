@@ -29,8 +29,10 @@ askUserWhatToEval <- function(dbPath = ".") {
       "onlyScores" = "DEEBeval: all, no plots, no scoreHTML, no summary",
       "onlyScoreHtml" = "DEEBeval: only scoreHTML",
       "onlySummary" = "DEEBeval: only summary",
+      "overall" = "DEEBeval: overall",
       "genCube" = "DEEBeval: generate best hypercube",
       "copyBest" = "DEEBeval: copyBest",
+      "copyRegex" = "DEEBeval: copy methods by RegEx",
       "clean" = "clean things (choose)"
     ))
 
@@ -47,8 +49,10 @@ askUserWhatToEval <- function(dbPath = ".") {
     onlyScores = startEvaluation(dbPath, FALSE, FALSE, FALSE, FALSE),
     onlyScoreHtml = startScoresHtml(dbPath),
     onlySummary = startSummary(dbPath),
+    overall = startOverall(dbPath),
     genCube = startGenCube(dbPath),
     copyBest = startCopyBest(dbPath),
+    copyBest = startCopyRegex(dbPath),
     clean = startCleanChoose(dbPath),
     stop("Choice not implemented."))
 }
@@ -367,6 +371,16 @@ startSummary <- function(dbPath) {
 }
 
 
+startOverall <- function(dbPath) {
+  startComp(
+    rlang::expr_text(rlang::expr(
+      DEEBeval::createOverall(!!dbPath))),
+    prefix = "DEEBeval-overall",
+    timeInMinutes = 60,
+    mail = TRUE)
+}
+
+
 startGenCube <- function(dbPath, startAfterJobIds = NULL, methodTable = NULL, autoId = NULL) {
   if (hasValue(methodTable)) {
     filePath <- tempfile(pattern = "methodsTable", tmpdir = DEEBpath::autoIdDir(dbPath, autoId), fileext = ".csv")
@@ -417,13 +431,13 @@ startCleanMethods <- function(dbPath) {
     default = "all")
   cat("Type RegEx for methods to delete:\n")
   regex <- getLine()
-  cat("RegEx:", regex)
+  cat("RegEx:", regex, "\n")
   methodsTable <- DEEBpath::getMethods(dbPath, models, regex)
   cat("Following methods will be deleted:\n")
   cat(paste0(methodsTable$model, ": ", methodsTable$method, collapse="\n"), "\n")
   n <- nrow(methodsTable)
   cat("Will delete", n, "methods.\n")
-   readyToStart <- getUserInputYesNo(
+  readyToStart <- getUserInputYesNo(
     "Ready to start?",
     default = "Yes")
   if (readyToStart) {
@@ -432,6 +446,9 @@ startCleanMethods <- function(dbPath) {
       cat(i, ",", sep="")
       res <- unlink(methodsTable$path[[i]], recursive=TRUE, force=TRUE, expand=FALSE)
       fails <- fails + res
+      paths <- DEEBpath::getPaths(dbPath, methodsTable$model[[i]])
+      files <- list.files(paths$eval, paste0("^task\\d{2}", methodsTable$method[[i]], "_eval.csv"), full.names=TRUE)
+      file.remove(files)
     }
     cat("\nDone.\n")
     cat("There were", fails, "fails out of", n, "\n")
@@ -439,3 +456,43 @@ startCleanMethods <- function(dbPath) {
 
   return(invisible())
 }
+
+
+
+startCopyRegex <- function(dbPath) {
+  modelsAll <- DEEBpath::getModels(dbPath)
+  models <- getUserInput(
+    "Choose model(s)",
+    modelsAll,
+    multi = TRUE,
+    default = "all")
+  cat("Type RegEx for methods to copy:\n")
+  regex <- getLine()
+  cat("RegEx:", regex, "\n")
+  methodsTable <- DEEBpath::getMethods(dbPath, models, regex)
+  cat("Following methods will be copied:\n")
+  cat(paste0(methodsTable$model, ": ", methodsTable$method, collapse="\n"), "\n")
+  n <- nrow(methodsTable)
+  cat("Will copy", n, "methods.\n")
+  cat("Choose target DEEB DB:\n")
+  toDbPath <- getUserInputDeebDb(dbPath)
+  cat("Chose:", toDbPath, "\n")
+  readyToStart <- getUserInputYesNo(
+    "Ready to start?",
+    default = "Yes")
+  if (readyToStart) {
+    successes <- 0
+    for (i in seq_len(n)) {
+      cat(i, ",", sep="")
+      targetPaths <- DEEBpath::getPaths(toDbPath, methodsTable$model[[i]])
+      dir.create(targetPaths$esti, recursive=TRUE, showWarnings=FALSE)
+      res <- file.copy(methodsTable$path[[i]], targetPaths$esti, recursive=TRUE, overwrite=TRUE)
+      successes <- successes + res
+    }
+    cat("\nDone.\n")
+    cat("There were", successes, "successes out of", n, "\n")
+  }
+
+  return(invisible())
+}
+
