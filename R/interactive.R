@@ -418,5 +418,24 @@ startCleanMethods <- function(dbPath) {
   cat("Type RegEx for methods to delete:\n")
   regex <- getLine()
   cat("RegEx:", regex)
-  stop("Not Implemented Yet!") # TODO
+  methodsTable <- DEEBpath::getMethods(dbPath, models, regex)
+  cat("Following methods will be deleted:\n")
+  cat(paste0(methodsTable$model, ": ", methodsTable$method, collapse="\n"), "\n")
+  n <- nrow(methodsTable)
+  cat("Will delete", n, "methods.\n")
+   readyToStart <- getUserInputYesNo(
+    "Ready to start?",
+    default = "Yes")
+  if (readyToStart) {
+    fails <- 0
+    for (i in seq_len(n)) {
+      cat(i, ",", sep="")
+      res <- unlink(methodsTable$path[[i]], recursive=TRUE, force=TRUE, expand=FALSE)
+      fails <- fails + res
+    }
+    cat("\nDone.\n")
+    cat("There were", fails, "fails out of", n, "\n")
+  }
+
+  return(invisible())
 }
