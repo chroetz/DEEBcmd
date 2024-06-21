@@ -397,11 +397,26 @@ startCleanChoose <- function(dbPath) {
     "Choose what to clean",
     c("log" = "log files",
       "empty" = "remove empty method dirs",
-      "nonCsv" = "remove method dirs without csv files"))
+      "nonCsv" = "remove method dirs without csv files",
+      "methods" = "remove methods with RegEx"))
   switch(
     choice,
     empty = DEEBpath::removeEmptyMethodFolders(dbPath, FALSE),
     nonCsv = DEEBpath::removeEmptyMethodFolders(dbPath, TRUE),
     log = cleanLogDir(dbPath),
+    methods = startCleanMethods(dbPath),
     stop("Choice not implemented."))
+}
+
+startCleanMethods <- function(dbPath) {
+  modelsAll <- DEEBpath::getModels(dbPath)
+  models <- getUserInput(
+    "Choose model(s)",
+    modelsAll,
+    multi = TRUE,
+    default = "all")
+  cat("Type RegEx for methods to delete:\n")
+  regex <- getLine()
+  cat("RegEx:", regex)
+  stop("Not Implemented Yet!") # TODO
 }
