@@ -213,6 +213,7 @@ evalExpressionList <- function(dbPath, expressionList, parallel = TRUE, numCores
         errorDetected <- TRUE
       }
     })
+    sink(file = NULL)
     if (errorDetected) stop()
     return(results)
   }
@@ -229,5 +230,6 @@ evalExpressionList <- function(dbPath, expressionList, parallel = TRUE, numCores
   })
   cat("Done evalutating expression list.\n")
   cat(format(Sys.time()), "\n")
+  sink(file = NULL)
   return(results)
 }
