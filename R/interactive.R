@@ -52,7 +52,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     overall = startOverall(dbPath),
     genCube = startGenCube(dbPath),
     copyBest = startCopyBest(dbPath),
-    copyBest = startCopyRegex(dbPath),
+    copyRegex = startCopyRegex(dbPath),
     clean = startCleanChoose(dbPath),
     stop("Choice not implemented."))
 }

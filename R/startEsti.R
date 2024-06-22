@@ -50,7 +50,7 @@ startEstimHyper <- function(
   } else {
     if (runLocal) {
       cat("Run jobs local.\n")
-      evalExpressionList(jobCollection$jobTable$expression, parallel = parallel)
+      evalExpressionList(dbPath, jobCollection$jobTable$expression, parallel = parallel)
     } else {
       cat("Try to use slurm to run jobs.\n")
       for (i in seq_len(jobCollection$n)) {
@@ -118,6 +118,7 @@ collectJobs <- function(
 
     methodInfo <- methodTable[i, ]
     obsNr <- DEEBpath::getObsNrFromName(dbPath, methodInfo$model, methodInfo$obs)
+    browser()
     hyperParmsList <- DEEBesti::loadAsHyperParmsList(dbPath, methodInfo$methodFile)
     for (expansionNr in seq_along(hyperParmsList$list)) {
       hyperParms <- hyperParmsList$list[[expansionNr]]
@@ -185,7 +186,12 @@ evalSave <- function(expr) {
 }
 
 
-evalExpressionList <- function(expressionList, parallel = TRUE, numCores = parallel::detectCores() - 1) {
+evalExpressionList <- function(dbPath, expressionList, parallel = TRUE, numCores = parallel::detectCores() - 1) {
+
+  logDir <- DEEBpath::getLogDir(dbPath)
+  dir.create(logDir, showWarnings=FALSE, recursive=TRUE)
+  logFilePath <- file.path(logDir, format(Sys.time(), "DEEBcmd_evalExpressionList_%Y-%m-%d-%H-%M-%S.txt"))
+  sink(logFilePath, split=TRUE)
 
   if (parallel) {
     numCores <- pmin(numCores, length(expressionList))
