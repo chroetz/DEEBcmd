@@ -118,7 +118,6 @@ collectJobs <- function(
 
     methodInfo <- methodTable[i, ]
     obsNr <- DEEBpath::getObsNrFromName(dbPath, methodInfo$model, methodInfo$obs)
-    browser()
     hyperParmsList <- DEEBesti::loadAsHyperParmsList(dbPath, methodInfo$methodFile)
     for (expansionNr in seq_along(hyperParmsList$list)) {
       hyperParms <- hyperParmsList$list[[expansionNr]]
