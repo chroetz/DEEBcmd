@@ -33,10 +33,10 @@ startEstimHyper <- function(
   }
 
   if (hasValue(autoId) && jobCollection$n > 0) {
-      autoRound <- DEEBpath::addToPastJobs(dbPath, autoId, jobCollection$jobTable)
-    } else {
-      autoRound <- NULL
-    }
+    autoRound <- DEEBpath::addToPastJobs(dbPath, autoId, jobCollection$jobTable)
+  } else {
+    autoRound <- NULL
+  }
 
   jobIds <- numeric()
 
@@ -44,6 +44,7 @@ startEstimHyper <- function(
     cat("Nothing to do.\n")
     if (isFirstCall) {
       cat("But is first call. So may need to check for best.\n")
+      warning("Does not calculate scores of previously run jobs.")
     } else {
       return(invisible())
     }
