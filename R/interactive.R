@@ -30,6 +30,7 @@ askUserWhatToEval <- function(dbPath = ".") {
       "onlyScoreHtml" = "DEEBeval: only scoreHTML",
       "onlySummary" = "DEEBeval: only summary",
       "overall" = "DEEBeval: overall",
+      "info" = "DEEBeval: collectInfo",
       "genCube" = "DEEBeval: generate best hypercube",
       "copyBest" = "DEEBeval: copyBest",
       "copyRegex" = "DEEBeval: copy methods by RegEx",
@@ -50,6 +51,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     onlyScoreHtml = startScoresHtml(dbPath),
     onlySummary = startSummary(dbPath),
     overall = startOverall(dbPath),
+    info = startCollectInfo(dbPath),
     genCube = startGenCube(dbPath),
     copyBest = startCopyBest(dbPath),
     copyRegex = startCopyRegex(dbPath),
@@ -202,7 +204,7 @@ interactScanEval <- function(dbPath) {
         )
       )),
       prefix = "DEEBevalrunEvalTbl-choose",
-      timeInMinutes = 120,
+      timeInMinutes = 1440,
       mail = TRUE
     )
   }
@@ -223,7 +225,7 @@ startNewEval <- function(dbPath, startAfterJobIds = NULL) {
       )
     )),
     prefix = "DEEBeval-runEvalTbl-all",
-    timeInMinutes = 200,
+    timeInMinutes = 1440,
     mail = TRUE,
     startAfterJobIds = startAfterJobIds
   )
@@ -246,7 +248,7 @@ startNewEvalAuto <- function(dbPath, startAfterJobIds = NULL, autoId = NULL, aut
   jobId <- startComp(
     cmd,
     prefix = "DEEBeval-runEvalTbl-all",
-    timeInMinutes = 200,
+    timeInMinutes = 1440,
     mail = TRUE,
     startAfterJobIds = startAfterJobIds
   )
@@ -321,7 +323,7 @@ interactChoose <- function(dbPath) {
         )
       )),
       prefix = "DEEBeval-runEval-choosen",
-      timeInMinutes = 120,
+      timeInMinutes = 1440,
       mail = TRUE
     )
   }
@@ -343,7 +345,7 @@ startEvaluation <- function(dbPath, createPlots, writeScoreHtml, createSummary, 
       )
     )),
     prefix = "DEEBeval-runEval-all",
-    timeInMinutes = 240,
+    timeInMinutes = 1440,
     mail = TRUE
   )
 }
@@ -355,7 +357,7 @@ startScoresHtml <- function(dbPath) {
       rlang::expr_text(rlang::expr(
         DEEBeval::runScoreHtml(!!dbPath, !!model))),
       prefix = paste0("DEEBeval-scoresHtml-", model),
-      timeInMinutes = 60,
+      timeInMinutes = 1440,
       mail = TRUE)
   }
 }
@@ -366,7 +368,7 @@ startSummary <- function(dbPath) {
     rlang::expr_text(rlang::expr(
       DEEBeval::createSummary(!!dbPath))),
     prefix = "DEEBeval-summary",
-    timeInMinutes = 60,
+    timeInMinutes = 1440,
     mail = TRUE)
 }
 
@@ -376,7 +378,17 @@ startOverall <- function(dbPath) {
     rlang::expr_text(rlang::expr(
       DEEBeval::createOverall(!!dbPath))),
     prefix = "DEEBeval-overall",
-    timeInMinutes = 60,
+    timeInMinutes = 1440,
+    mail = TRUE)
+}
+
+
+startCollectInfo <- function(dbPath) {
+  startComp(
+    rlang::expr_text(rlang::expr(
+      DEEBeval::writeInfo(!!dbPath))),
+    prefix = "DEEBeval-overall",
+    timeInMinutes = 1440,
     mail = TRUE)
 }
 
@@ -392,7 +404,7 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, methodTable = NULL, au
     rlang::expr_text(rlang::expr(
       DEEBeval::generateBestHyperCube(!!dbPath, !!filePath, !!autoId))),
     prefix = "DEEBeval-genCube",
-    timeInMinutes = 10,
+    timeInMinutes = 1440,
     mail = TRUE,
     startAfterJobIds = startAfterJobIds)
   return(jobId)
