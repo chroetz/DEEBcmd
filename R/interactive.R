@@ -167,7 +167,7 @@ interactAutoHyper <- function(dbPath) {
     ))
     startComp(
       cmdText,
-      prefix = past0("auto0_", methodInfo$model, "_", basename(methodInfo$methodFile)),
+      prefix = paste0("auto0_", methodInfo$model, "_", basename(methodInfo$methodFile)),
       timeInMinutes = 60,
       mail = FALSE)
   }
