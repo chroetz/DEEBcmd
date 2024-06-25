@@ -251,7 +251,7 @@ startNewEvalAuto <- function(dbPath, startAfterJobIds = NULL, autoId = NULL, aut
     cmd,
     prefix = "DEEBeval-runEvalTbl-all",
     timeInMinutes = 1440,
-    mail = TRUE,
+    mail = FALSE,
     startAfterJobIds = startAfterJobIds,
     autoId=autoId
   )
@@ -327,7 +327,7 @@ interactChoose <- function(dbPath) {
       )),
       prefix = "DEEBeval-runEval-choosen",
       timeInMinutes = 1440,
-      mail = TRUE
+      mail = FALSE
     )
   }
 }
@@ -408,7 +408,7 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, methodTable = NULL, au
       DEEBeval::generateBestHyperCube(!!dbPath, !!filePath, !!autoId))),
     prefix = "DEEBeval-genCube",
     timeInMinutes = 1440,
-    mail = TRUE,
+    mail = FALSE,
     startAfterJobIds = startAfterJobIds,
     autoId=autoId)
   return(jobId)
