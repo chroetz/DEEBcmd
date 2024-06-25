@@ -158,11 +158,18 @@ interactAutoHyper <- function(dbPath) {
 
   for (i in seq_len(nrow(methodTable))) {
     methodInfo <- methodTable[i, ]
-    initOneEstimAutoHyper(
-      dbPath,
-      runLocal = runLocal,
-      parallel = parallel,
-      methodInfo)
+    cmdText <-  rlang::expr_text(rlang::expr(
+      DEEBcmd::initOneEstimAutoHyper(
+        dbPath = !!dbPath,
+        runLocal = !!runLocal,
+        parallel = !!parallel,
+        methodInfo = !!methodInfo)
+    ))
+    startComp(
+      cmdText,
+      prefix = "DEEBcmd-auto0",
+      timeInMinutes = 60,
+      mail = FALSE)
   }
   return(invisible())
 }

@@ -57,6 +57,7 @@ startEstimHyper <- function(
 
 
 
+#' @export
 initOneEstimAutoHyper <- function(
   dbPath,
   runLocal,
