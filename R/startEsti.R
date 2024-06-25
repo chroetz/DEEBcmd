@@ -110,7 +110,8 @@ initOneEstimAutoHyper <- function(
           prefix = jobInfo$prefix,
           timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 60,
           nCpus = if(hasValue(jobInfo$nCpus)) jobInfo$nCpus else 1,
-          mail = FALSE)
+          mail = FALSE,
+          autoId = autoId)
         jobIds <- c(jobIds, jobId)
       }
     }
@@ -184,7 +185,8 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
           prefix = jobInfo$prefix,
           timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 60,
           nCpus = if(hasValue(jobInfo$nCpus)) jobInfo$nCpus else 1,
-          mail = FALSE)
+          mail = FALSE,
+          autoId = autoId)
         jobIds <- c(jobIds, jobId)
       }
     }

@@ -19,6 +19,7 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail
       " --wrap=\"Rscript -e '", gsub("\"", "\\\\\"", cmdStr), "'\"")
     cat(command, "\n")
     output <- system(command, intern = TRUE)
+    cat(output, "\n")
     jobId <- extractJobId(output)
     return(jobId)
   } else {
