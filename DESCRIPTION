@@ -19,4 +19,5 @@ Imports:
     parallel,
     readr,
     rlang,
+    tibble,
     withr

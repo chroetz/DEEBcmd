@@ -1,10 +1,10 @@
 #' @export
-startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail=TRUE, startAfterJobIds=NULL) {
+startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail=TRUE, startAfterJobIds=NULL, autoId = NULL) {
   cat("startComp():", format(Sys.time()), "\n")
   if (isSlurmAvailable()) {
     jobName <- paste0(prefix, "_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
     cat("Starting SLURM job", jobName, "\n")
-    logDir <- DEEBpath::getLogDir(NULL, relative=TRUE)
+    logDir <- DEEBpath::getLogDir(NULL, relative=TRUE, autoId=autoId)
     if (!dir.exists(logDir)) dir.create(logDir, recursive=TRUE, showWarnings=FALSE)
     command <- paste0(
       "sbatch ",

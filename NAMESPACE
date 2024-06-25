@@ -2,6 +2,7 @@
 
 S3method(print,InteractionStarter)
 export(.)
+export(continueOneEstimAutoHyper)
 export(interact)
 export(interactAutoHyper)
 export(startComp)

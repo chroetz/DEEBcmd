@@ -27,6 +27,7 @@ askUserWhatToEval <- function(dbPath = ".") {
       "evalAll" = "DEEBeval: all, no plots, scoreHTML, summary",
       "evalAllSumm" = "DEEBeval: all, no plots, no scoreHTML, summary",
       "onlyScores" = "DEEBeval: all, no plots, no scoreHTML, no summary",
+      "onlyScoresAndCsv" = "DEEBeval: all, no plots, no scoreHTML, only summary csv",
       "onlyScoreHtml" = "DEEBeval: only scoreHTML",
       "onlySummary" = "DEEBeval: only summary",
       "overall" = "DEEBeval: overall",
@@ -48,6 +49,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     evalAll = startEvaluation(dbPath, FALSE, TRUE, TRUE, FALSE),
     evalAllSumm = startEvaluation(dbPath, FALSE, FALSE, TRUE, FALSE),
     onlyScores = startEvaluation(dbPath, FALSE, FALSE, FALSE, FALSE),
+    onlyScoresAndCsv = startEvaluation(dbPath, FALSE, FALSE, TRUE, TRUE),
     onlyScoreHtml = startScoresHtml(dbPath),
     onlySummary = startSummary(dbPath),
     overall = startOverall(dbPath),
@@ -130,28 +132,22 @@ interactHyper <- function(dbPath) {
 
 
 #' @export
-interactAutoHyper <- function(dbPath, runLocal = FALSE, parallel = FALSE, autoId = NULL) {
-  if (hasValue(autoId)) {
-    methodTablePaths <- DEEBpath::getMethodTableNames(dbPath, autoId = autoId)
-  } else {
-    autoId <- DEEBpath::newAutoId(dbPath)
-    cat("Scaning for possible choices...\n")
-    methodTablePathsAll <- DEEBpath::getMethodTableNames(dbPath)
-    methodTablePathsNames <- getUserInput(
-      "Choose method tables(s)",
-      names(methodTablePathsAll),
-      multi = TRUE,
-      default = "all")
-    methodTablePaths <- methodTablePathsAll[methodTablePathsNames]
-    if (isSlurmAvailable()) {
-      runLocal <- FALSE
-      parallel <- FALSE
-    } else {
-      runLocal <- TRUE
-      parallel <- getUserInputYesNo("parallel?", "Yes")
-    }
+interactAutoHyper <- function(dbPath) {
 
-    DEEBpath::initializeAuto(dbPath, methodTablePaths, autoId = autoId)
+  cat("Scaning for possible choices...\n")
+  methodTablePathsAll <- DEEBpath::getMethodTableNames(dbPath)
+  methodTablePathsNames <- getUserInput(
+    "Choose method tables(s)",
+    names(methodTablePathsAll),
+    multi = TRUE,
+    default = "all")
+  methodTablePaths <- methodTablePathsAll[methodTablePathsNames]
+  if (isSlurmAvailable()) {
+    runLocal <- FALSE
+    parallel <- FALSE
+  } else {
+    runLocal <- TRUE
+    parallel <- getUserInputYesNo("parallel?", "Yes")
   }
 
   if (length(methodTablePaths) == 0) {
@@ -159,17 +155,15 @@ interactAutoHyper <- function(dbPath, runLocal = FALSE, parallel = FALSE, autoId
   }
 
   methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths)
-  truthNrs <- DEEBpath::getUniqueTruthNrs(dbPath)
 
-  startEstimHyper(
-    dbPath,
-    methodTable,
-    truthNrs,
-    forceOverwrite = FALSE,
-    runSummaryAfter = TRUE,
-    autoId = autoId,
-    runLocal = runLocal,
-    parallel = parallel)
+  for (i in seq_len(nrow(methodTable))) {
+    methodInfo <- methodTable[i, ]
+    initOneEstimAutoHyper(
+      dbPath,
+      runLocal = runLocal,
+      parallel = parallel,
+      methodInfo)
+  }
   return(invisible())
 }
 
@@ -242,7 +236,8 @@ startNewEvalAuto <- function(dbPath, startAfterJobIds = NULL, autoId = NULL, aut
         writeScoreHtml = FALSE,
         createSummary = FALSE,
         verbose = FALSE,
-        onlySummarizeScore = TRUE
+        onlySummarizeScore = TRUE,
+        autoId = !!autoId
       )
     ))
   jobId <- startComp(
@@ -250,7 +245,8 @@ startNewEvalAuto <- function(dbPath, startAfterJobIds = NULL, autoId = NULL, aut
     prefix = "DEEBeval-runEvalTbl-all",
     timeInMinutes = 1440,
     mail = TRUE,
-    startAfterJobIds = startAfterJobIds
+    startAfterJobIds = startAfterJobIds,
+    autoId=autoId
   )
   return(jobId)
 }
@@ -406,7 +402,8 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, methodTable = NULL, au
     prefix = "DEEBeval-genCube",
     timeInMinutes = 1440,
     mail = TRUE,
-    startAfterJobIds = startAfterJobIds)
+    startAfterJobIds = startAfterJobIds,
+    autoId=autoId)
   return(jobId)
 }
 

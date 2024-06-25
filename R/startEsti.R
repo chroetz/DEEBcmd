@@ -5,24 +5,16 @@ startEstimHyper <- function(
   truthNrFilter,
   forceOverwrite = FALSE,
   runSummaryAfter = TRUE,
-  autoId = NULL,
   runLocal = FALSE,
   parallel = FALSE
 ) {
 
-  if (hasValue(autoId)) {
-    isFirstCall <- DEEBpath::isFirstAutoCall(dbPath, autoId)
-  } else {
-    isFirstCall <- FALSE
-  }
-
-  pastJobs <- if (hasValue(autoId)) DEEBpath::getPastJobs(dbPath, autoId) else NULL
   jobCollection <- collectJobs(
     dbPath,
     methodTable,
     truthNrFilter,
     forceOverwrite,
-    pastJobs
+    pastJobs = NULL
   )
 
   cat("There are", jobCollection$n, "jobs to do;", jobCollection$nSkipped, "others were skipped.\n")
@@ -32,22 +24,11 @@ startEstimHyper <- function(
     return(invisible())
   }
 
-  if (hasValue(autoId) && jobCollection$n > 0) {
-    autoRound <- DEEBpath::addToPastJobs(dbPath, autoId, jobCollection$jobTable)
-  } else {
-    autoRound <- NULL
-  }
-
   jobIds <- numeric()
 
   if (jobCollection$n == 0) {
     cat("Nothing to do.\n")
-    if (isFirstCall) {
-      cat("But is first call. So may need to check for best.\n")
-      warning("Does not calculate scores of previously run jobs.")
-    } else {
-      return(invisible())
-    }
+    return(invisible())
   } else {
     if (runLocal) {
       cat("Run jobs local.\n")
@@ -68,26 +49,159 @@ startEstimHyper <- function(
   }
 
   if (runSummaryAfter) {
-    if (hasValue(autoId)) {
-      jobIds <- startNewEvalAuto(dbPath, startAfterJobIds = jobIds, autoId = autoId, autoRound = autoRound)
+    jobIds <- startNewEval(dbPath, startAfterJobIds = jobIds)
+  }
+
+  return(jobIds)
+}
+
+
+
+initOneEstimAutoHyper <- function(
+  dbPath,
+  runLocal,
+  parallel,
+  methodInfo
+) {
+
+  autoId <- DEEBpath::initializeAuto(
+    dbPath,
+    methodInfo,
+    runLocal = runLocal,
+    parallel = parallel)
+
+  jobCollection <- collectJobs(
+    dbPath,
+    methodInfo,
+    truthNrFilter = NULL,
+    forceOverwrite = FALSE,
+    pastJobs = NULL)
+
+  cat("There are", jobCollection$n, "jobs to do;", jobCollection$nSkipped, "others were skipped.\n")
+
+  if (jobCollection$nSkipped + jobCollection$n == 0) {
+    cat("No jobs at all. Stopping.\n")
+    return(invisible())
+  }
+
+  if (jobCollection$n > 0) {
+    autoRound <- DEEBpath::addToPastJobs(dbPath, autoId, jobCollection$jobTable)
+  } else {
+    autoRound <- NULL
+  }
+
+  jobIds <- numeric()
+
+  if (jobCollection$n == 0) {
+    cat("Nothing to do.\n")
+    cat("But is first call. So may need to check for best.\n")
+    warning("Does not calculate scores of previously run jobs.", immediate.=TRUE)
+  } else {
+    if (runLocal) {
+      cat("Run jobs local.\n")
+      evalExpressionList(dbPath, jobCollection$jobTable$expression, parallel = parallel, autoId=autoId)
     } else {
-      jobIds <- startNewEval(dbPath, startAfterJobIds = jobIds)
+      cat("Try to use slurm to run jobs.\n")
+      for (i in seq_len(jobCollection$n)) {
+        jobInfo <- jobCollection$jobTable[i, ]
+        jobId <- startComp(
+          rlang::expr_text(jobInfo$expression[[1]]),
+          prefix = jobInfo$prefix,
+          timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 60,
+          nCpus = if(hasValue(jobInfo$nCpus)) jobInfo$nCpus else 1,
+          mail = FALSE)
+        jobIds <- c(jobIds, jobId)
+      }
     }
   }
 
-  if (hasValue(autoId)) {
-    jobIds <- startGenCube(dbPath, jobIds, methodTable, autoId = autoId)
+  jobIds <- startNewEvalAuto(dbPath, startAfterJobIds = jobIds, autoId = autoId, autoRound = autoRound)
 
-    cmdText <-  rlang::expr_text(rlang::expr(
-      DEEBcmd::interactAutoHyper(!!dbPath, autoId = !!autoId, runLocal = !!runLocal, parallel = !!parallel)
-    ))
-    jobIds <- startComp(
-      cmdText,
-      prefix = "DEEBcmd-auto",
-      timeInMinutes = 60,
-      mail = FALSE,
-      startAfterJobIds = jobIds)
+  jobIds <- startGenCube(dbPath, jobIds, methodInfo, autoId = autoId)
+
+  cmdText <-  rlang::expr_text(rlang::expr(
+    DEEBcmd::continueOneEstimAutoHyper(!!dbPath, autoId = !!autoId)
+  ))
+  jobIds <- startComp(
+    cmdText,
+    prefix = "DEEBcmd-auto",
+    timeInMinutes = 60,
+    mail = FALSE,
+    startAfterJobIds = jobIds,
+    autoId=autoId)
+
+  return(jobIds)
+}
+
+
+#' @export
+continueOneEstimAutoHyper <- function(dbPath, autoId) {
+
+  methodInfo <- DEEBpath::readAutoInfo(dbPath, autoId)
+  methodTableNames <- DEEBpath::getMethodTableNames(dbPath, autoId)
+  i <- which.max(as.integer(stringr::str_extract(methodTableNames, "_(\\d+)\\.csv$", group=1)))
+  methodTable <- DEEBpath::getMethodTable(dbPath, methodTableNames[i])
+
+  pastJobs <- DEEBpath::getPastJobs(dbPath, autoId)
+
+  jobCollection <- collectJobs(
+    dbPath,
+    methodTable,
+    truthNrFilter = NULL,
+    forceOverwrite = FALSE,
+    pastJobs = pastJobs
+  )
+
+  cat("There are", jobCollection$n, "jobs to do;", jobCollection$nSkipped, "others were skipped.\n")
+
+  if (jobCollection$nSkipped + jobCollection$n == 0) {
+    cat("No jobs at all. Stopping.\n")
+    return(invisible())
   }
+
+  if (jobCollection$n > 0) {
+    autoRound <- DEEBpath::addToPastJobs(dbPath, autoId, jobCollection$jobTable)
+  } else {
+    autoRound <- NULL
+  }
+
+  jobIds <- numeric()
+
+  if (jobCollection$n == 0) {
+    cat("Nothing to do.\n")
+    return(invisible())
+  } else {
+    if (methodInfo$runLocal) {
+      cat("Run jobs local.\n")
+      evalExpressionList(dbPath, jobCollection$jobTable$expression, parallel = methodInfo$parallel, autoId=autoId)
+    } else {
+      cat("Try to use slurm to run jobs.\n")
+      for (i in seq_len(jobCollection$n)) {
+        jobInfo <- jobCollection$jobTable[i, ]
+        jobId <- startComp(
+          rlang::expr_text(jobInfo$expression[[1]]),
+          prefix = jobInfo$prefix,
+          timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 60,
+          nCpus = if(hasValue(jobInfo$nCpus)) jobInfo$nCpus else 1,
+          mail = FALSE)
+        jobIds <- c(jobIds, jobId)
+      }
+    }
+  }
+
+  jobIds <- startNewEvalAuto(dbPath, startAfterJobIds = jobIds, autoId = autoId, autoRound = autoRound)
+
+  jobIds <- startGenCube(dbPath, jobIds, methodTable, autoId = autoId)
+
+  cmdText <-  rlang::expr_text(rlang::expr(
+    DEEBcmd::continueOneEstimAutoHyper(!!dbPath, autoId = !!autoId)
+  ))
+  jobIds <- startComp(
+    cmdText,
+    prefix = "DEEBcmd-auto",
+    timeInMinutes = 60,
+    mail = FALSE,
+    startAfterJobIds = jobIds)
 
   return(jobIds)
 }
@@ -103,6 +217,8 @@ collectJobs <- function(
 ) {
 
   nSkipped <- 0
+
+  methodTable <- tibble::as_tibble(methodTable)
 
   jobTable <- dplyr::bind_cols(
     dplyr::tibble(
@@ -186,9 +302,9 @@ evalSave <- function(expr) {
 }
 
 
-evalExpressionList <- function(dbPath, expressionList, parallel = TRUE, numCores = parallel::detectCores() - 1) {
+evalExpressionList <- function(dbPath, expressionList, parallel = TRUE, numCores = parallel::detectCores() - 1, autoId = NULL) {
 
-  logDir <- DEEBpath::getLogDir(dbPath)
+  logDir <- DEEBpath::getLogDir(dbPath, autoId = autoId)
   dir.create(logDir, showWarnings=FALSE, recursive=TRUE)
   logFilePath <- file.path(logDir, format(Sys.time(), "DEEBcmd_evalExpressionList_%Y-%m-%d-%H-%M-%S.txt"))
   sink(logFilePath, split=TRUE)
