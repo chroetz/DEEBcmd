@@ -67,7 +67,8 @@ startCopyTruth <- function(dbPath) {
     rlang::expr_text(rlang::expr(DEEBesti::copyTruth(!!dbPath))),
     prefix = "DEEB_copyTruth",
     timeInMinutes = 20,
-    mail = TRUE
+    mail = TRUE,
+    dbPath = dbPath
   )
   return(invisible())
 }
@@ -169,7 +170,8 @@ interactAutoHyper <- function(dbPath) {
       cmdText,
       prefix = paste0("auto0_", methodInfo$model, "_", basename(methodInfo$methodFile)),
       timeInMinutes = 60,
-      mail = FALSE)
+      mail = FALSE,
+      dbPath = dbPath)
   }
   return(invisible())
 }
@@ -206,7 +208,8 @@ interactScanEval <- function(dbPath) {
       )),
       prefix = "DEEBevalrunEvalTbl-choose",
       timeInMinutes = 1440,
-      mail = TRUE
+      mail = TRUE,
+      dbPath = dbPath
     )
   }
 }
@@ -228,7 +231,8 @@ startNewEval <- function(dbPath, startAfterJobIds = NULL) {
     prefix = "DEEBeval-runEvalTbl-all",
     timeInMinutes = 1440,
     mail = TRUE,
-    startAfterJobIds = startAfterJobIds
+    startAfterJobIds = startAfterJobIds,
+    dbPath = dbPath
   )
   return(jobId)
 }
@@ -253,7 +257,8 @@ startNewEvalAuto <- function(dbPath, startAfterJobIds = NULL, autoId = NULL, aut
     timeInMinutes = 1440,
     mail = FALSE,
     startAfterJobIds = startAfterJobIds,
-    autoId=autoId
+    autoId=autoId,
+    dbPath = dbPath
   )
   return(jobId)
 }
@@ -327,7 +332,8 @@ interactChoose <- function(dbPath) {
       )),
       prefix = "DEEBeval-runEval-choosen",
       timeInMinutes = 1440,
-      mail = FALSE
+      mail = FALSE,
+      dbPath = dbPath
     )
   }
 }
@@ -349,7 +355,8 @@ startEvaluation <- function(dbPath, createPlots, writeScoreHtml, createSummary, 
     )),
     prefix = "DEEBeval-runEval-all",
     timeInMinutes = 1440,
-    mail = TRUE
+    mail = TRUE,
+    dbPath = dbPath
   )
 }
 
@@ -361,7 +368,8 @@ startScoresHtml <- function(dbPath) {
         DEEBeval::runScoreHtml(!!dbPath, !!model))),
       prefix = paste0("DEEBeval-scoresHtml-", model),
       timeInMinutes = 1440,
-      mail = TRUE)
+      mail = TRUE,
+      dbPath = dbPath)
   }
 }
 
@@ -372,7 +380,8 @@ startSummary <- function(dbPath) {
       DEEBeval::createSummary(!!dbPath))),
     prefix = "DEEBeval-summary",
     timeInMinutes = 1440,
-    mail = TRUE)
+    mail = TRUE,
+    dbPath = dbPath)
 }
 
 
@@ -382,7 +391,8 @@ startOverall <- function(dbPath) {
       DEEBeval::createOverall(!!dbPath))),
     prefix = "DEEBeval-overall",
     timeInMinutes = 1440,
-    mail = TRUE)
+    mail = TRUE,
+    dbPath = dbPath)
 }
 
 
@@ -392,7 +402,8 @@ startCollectInfo <- function(dbPath) {
       DEEBeval::writeInfo(!!dbPath))),
     prefix = "DEEBeval-overall",
     timeInMinutes = 1440,
-    mail = TRUE)
+    mail = TRUE,
+    dbPath = dbPath)
 }
 
 
@@ -410,7 +421,8 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, methodTable = NULL, au
     timeInMinutes = 1440,
     mail = FALSE,
     startAfterJobIds = startAfterJobIds,
-    autoId=autoId)
+    autoId=autoId,
+    dbPath = dbPath)
   return(jobId)
 }
 

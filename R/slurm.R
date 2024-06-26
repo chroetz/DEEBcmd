@@ -1,5 +1,5 @@
 #' @export
-startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail=TRUE, startAfterJobIds=NULL, autoId = NULL) {
+startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail=TRUE, startAfterJobIds=NULL, autoId = NULL, dbPath = NULL) {
   cat("startComp():", format(Sys.time()), "\n")
   if (isSlurmAvailable()) {
     jobName <- paste0(prefix, "_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
@@ -20,6 +20,10 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail
     cat(command, "\n")
     output <- system(command, intern = TRUE)
     cat(output, "\n")
+    if (str_detect(output, fixed("error", ignore_case = TRUE))) {
+      logFailedSubmission(deebDb, autoId, output, command)
+      return(NULL)
+    }
     jobId <- extractJobId(output)
     return(jobId)
   } else {
@@ -28,9 +32,11 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail
   }
 }
 
+
 isSlurmAvailable <- function() {
   return(suppressWarnings(system2("srun", stdout = FALSE, stderr = FALSE) != 127))
 }
+
 
 extractJobId <- function(x) {
   if (startsWith(x, "Submitted batch job ")) {
@@ -38,4 +44,10 @@ extractJobId <- function(x) {
   } else {
     return(NA)
   }
+}
+
+
+logFailedSubmission <- function(dbPath, autoId, message, command) {
+  filePath <- tempfile(paste0("failedSubmissions_", format(Sys.time(), "%Y-%m-%d-%H-%M-%S"), "_"), tmpdir=DEEBpath::getLogDir(dbPath))
+  writeLines(c(message,"\n",command,"\n",dbPath,"\n",autoId,"\n"), filePath)
 }

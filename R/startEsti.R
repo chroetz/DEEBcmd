@@ -42,8 +42,10 @@ startEstimHyper <- function(
           prefix = jobInfo$prefix,
           timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 60,
           nCpus = if(hasValue(jobInfo$nCpus)) jobInfo$nCpus else 1,
-          mail = FALSE)
+          mail = FALSE,
+          dbPath = dbPath)
         jobIds <- c(jobIds, jobId)
+        Sys.sleep(0.1) # do not overload slurm
       }
     }
   }
@@ -111,8 +113,10 @@ initOneEstimAutoHyper <- function(
           timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 60,
           nCpus = if(hasValue(jobInfo$nCpus)) jobInfo$nCpus else 1,
           mail = FALSE,
-          autoId = autoId)
+          autoId = autoId,
+          dbPath = dbPath)
         jobIds <- c(jobIds, jobId)
+        Sys.sleep(0.1) # do not overload slurm
       }
     }
   }
@@ -130,7 +134,8 @@ initOneEstimAutoHyper <- function(
     timeInMinutes = 60,
     mail = FALSE,
     startAfterJobIds = jobIds,
-    autoId=autoId)
+    autoId=autoId,
+    dbPath = dbPath)
 
   return(jobIds)
 }
@@ -186,8 +191,10 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
           timeInMinutes = if(hasValue(jobInfo$timeInMinutes)) jobInfo$timeInMinutes else 60,
           nCpus = if(hasValue(jobInfo$nCpus)) jobInfo$nCpus else 1,
           mail = FALSE,
-          autoId = autoId)
+          autoId = autoId,
+          dbPath = dbPath)
         jobIds <- c(jobIds, jobId)
+        Sys.sleep(0.1) # do not overload slurm
       }
     }
   }
@@ -204,7 +211,8 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
     prefix = "DEEBcmd-auto",
     timeInMinutes = 60,
     mail = FALSE,
-    startAfterJobIds = jobIds)
+    startAfterJobIds = jobIds,
+    dbPath = dbPath)
 
   return(jobIds)
 }
