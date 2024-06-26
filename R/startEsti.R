@@ -385,6 +385,22 @@ evalExpressionListSlurmArray <- function(
     startAfterJobIds=NULL
 ) {
   if (length(expressionList) == 0) return(NULL)
+  MaxArraySize <- 1000
+  if (length(expressionList) > MaxArraySize) {
+    groups <- ceiling(seq_along(expressionList) / MaxArraySize)
+    expressionListList <- split(expressionList, groups)
+    res <- sapply(
+      expressionListList,
+      evalExpressionListSlurmArray,
+      dbPath=dbPath,
+      autoId = autoId,
+      prefix=prefix,
+      timeInMinutes=timeInMinutes,
+      nCpus = nCpus,
+      mail=mail,
+      startAfterJobIds=startAfterJobIds)
+    return(res)
+  }
   cmdDir <- DEEBpath::getCmdDir(dbPath, autoId)
   if (!dir.exists(cmdDir))  dir.create(cmdDir)
   filePath <- tempfile(paste0("cmd_", format(Sys.time(), "%Y-%m-%d-%H-%M-%S"), "_"), tmpdir=cmdDir, fileext=".txt")
