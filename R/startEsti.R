@@ -384,6 +384,7 @@ evalExpressionListSlurmArray <- function(
     mail=TRUE,
     startAfterJobIds=NULL
 ) {
+  if (length(expressionList) == 0) return(NULL)
   cmdDir <- DEEBpath::getCmdDir(dbPath, autoId)
   if (!dir.exists(cmdDir))  dir.create(cmdDir)
   filePath <- tempfile(paste0("cmd_", format(Sys.time(), "%Y-%m-%d-%H-%M-%S"), "_"), tmpdir=cmdDir, fileext=".txt")

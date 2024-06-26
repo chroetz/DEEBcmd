@@ -22,14 +22,14 @@ askUserWhatToEval <- function(dbPath = ".") {
       "hyper" = "DEEBesti: choose",
       "autoHyper" = "DEEBesti: auto hyper",
       "choose" = "DEEBeval: choose",
-      "scan" = "DEEBeval: new, choose",
+      "evalNew" = "DEEBeval: new, only csv in evaluation",
       "scanRun" = "DEEBeval: new, no plots, no scoreHTML, summary",
       "evalAll" = "DEEBeval: all, no plots, scoreHTML, summary",
       "evalAllSumm" = "DEEBeval: all, no plots, no scoreHTML, summary",
       "onlyScores" = "DEEBeval: all, no plots, no scoreHTML, no summary",
       "onlyScoresAndCsv" = "DEEBeval: all, no plots, no scoreHTML, only summary csv",
       "onlyScoreHtml" = "DEEBeval: only scoreHTML",
-      "onlySummary" = "DEEBeval: only summary",
+      "summaryChoose" = "DEEBeval: summary choose",
       "overall" = "DEEBeval: overall",
       "info" = "DEEBeval: collectInfo",
       "genCube" = "DEEBeval: generate best hypercube",
@@ -43,7 +43,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     copyTruth = startCopyTruth(dbPath),
     hyper = interactHyper(dbPath),
     autoHyper = interactAutoHyper(dbPath),
-    scan = interactScanEval(dbPath),
+    evalNew = startEvalNewPerModel(dbPath),
     scanRun = startNewEval(dbPath),
     choose = interactChoose(dbPath),
     evalAll = startEvaluation(dbPath, FALSE, TRUE, TRUE, FALSE),
@@ -51,7 +51,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     onlyScores = startEvaluation(dbPath, FALSE, FALSE, FALSE, FALSE),
     onlyScoresAndCsv = startEvaluation(dbPath, FALSE, FALSE, TRUE, TRUE),
     onlyScoreHtml = startScoresHtml(dbPath),
-    onlySummary = startSummary(dbPath),
+    summaryChoose = startSummary(dbPath),
     overall = startOverall(dbPath),
     info = startCollectInfo(dbPath),
     genCube = startGenCube(dbPath),
@@ -185,40 +185,34 @@ interactAutoHyper <- function(dbPath) {
 }
 
 
-interactScanEval <- function(dbPath) {
-  createPlots <- getUserInputYesNo(
-    "Should plots be created?",
-    default = "No")
-  writeScoreHtml <- getUserInputYesNo(
-    "Should the scores-html be created?",
-    default = "Yes")
-  createSummary <- getUserInputYesNo(
-    "Should summary be created?",
-    default = "Yes")
-  onlySummarizeScore <- getUserInputYesNo(
-    "onlySummarizeScore?",
-    default = "No")
-  readyToStart <- getUserInputYesNo(
-    "Ready to start?",
-    default = "Yes")
-  if (readyToStart) {
-    startComp(
-      rlang::expr_text(rlang::expr(
-        DEEBeval::runEvalTbl(
-          !!dbPath,
-          DEEBpath::getNew(!!dbPath),
-          createPlots = !!createPlots,
-          writeScoreHtml = !!writeScoreHtml,
-          createSummary = !!createSummary,
-          onlySummarizeScore = !!onlySummarizeScore,
-          verbose = FALSE
-        )
-      )),
-      prefix = "DEEBevalrunEvalTbl-choose",
-      timeInMinutes = 1440,
-      mail = TRUE,
-      dbPath = dbPath
+startEvalNewPerModel <- function(dbPath) {
+  models <- DEEBpath::getModels(dbPath)
+  exprList <- lapply(models, \(model) {
+    rlang::expr(
+      DEEBeval::runEvalTbl(
+        !!dbPath,
+        DEEBpath::getNew(!!dbPath, !!model),
+        scoreFilter = NULL,
+        createPlots = FALSE,
+        verbose = FALSE,
+        writeScoreHtml = FALSE,
+        createSummary = FALSE,
+        onlySummarizeScore = FALSE,
+        autoId = NULL))})
+  if (isSlurmAvailable()) {
+    evalExpressionListSlurmArray(
+      expressionList=exprList,
+      dbPath = dbPath,
+      autoId = NULL,
+      prefix="evalnew",
+      timeInMinutes=1440,
+      nCpus = 1,
+      mail=FALSE,
+      startAfterJobIds=NULL
     )
+  } else {
+    parallel <- getUserInputYesNo("parallel?", "Yes")
+    evalExpressionList(dbPath, exprList, parallel = parallel)
   }
 }
 
@@ -383,9 +377,26 @@ startScoresHtml <- function(dbPath) {
 
 
 startSummary <- function(dbPath) {
+  collectScores <- getUserInputYesNo(
+    "collectScores (_summary/scores.csv)?",
+    default = "No")
+  collectHyper <- getUserInputYesNo(
+    "collectHyper (_summary/<model>_<method>.csv)?",
+    default = "No")
+  renderSummary <- getUserInputYesNo(
+    "renderSummary?",
+    default = "No")
+  renderHyper <- getUserInputYesNo(
+    "renderHyper?",
+    default = "No")
   startComp(
     rlang::expr_text(rlang::expr(
-      DEEBeval::createSummary(!!dbPath))),
+      DEEBeval::createSummary(
+        !!dbPath,
+        collectScores = !!collectScores,
+        collectHyper = !!collectHyper,
+        renderSummary = !!renderSummary,
+        renderHyper = !!renderHyper))),
     prefix = "DEEBeval-summary",
     timeInMinutes = 1440,
     mail = TRUE,
