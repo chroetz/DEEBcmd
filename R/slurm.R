@@ -70,7 +70,7 @@ startArrayTask <- function(cmdFilePath, arrayTaskNr) {
   endLineIdx <- stringr::str_which(cmdTextAll, paste0("# END ", arrayTaskNr))
   stopifnot(length(startLineIdx) == 1)
   stopifnot(length(endLineIdx) == 1)
-  stopifnot(startLineIdx+1 >= endLineIdx-1)
+  stopifnot(startLineIdx+1 <= endLineIdx-1)
   cmdText <- paste(cmdTextAll[(startLineIdx+1):(endLineIdx-1)], collapse="\n")
   cat("Evaluate the expression:\n")
   cat(cmdText, "\n")
