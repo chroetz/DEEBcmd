@@ -20,8 +20,8 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail
     cat(command, "\n")
     output <- system(command, intern = TRUE)
     cat(output, "\n")
-    if (str_detect(output, fixed("error", ignore_case = TRUE))) {
-      logFailedSubmission(deebDb, autoId, output, command)
+    if (stringr::str_detect(output, stringr::fixed("error", ignore_case = TRUE))) {
+      logFailedSubmission(dbPath, autoId, output, command)
       return(NULL)
     }
     jobId <- extractJobId(output)
