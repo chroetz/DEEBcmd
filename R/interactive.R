@@ -157,21 +157,29 @@ interactAutoHyper <- function(dbPath) {
 
   methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths)
 
-  for (i in seq_len(nrow(methodTable))) {
+  exprList <- lapply(seq_len(nrow(methodTable)), \(i) {
     methodInfo <- methodTable[i, ]
-    cmdText <-  rlang::expr_text(rlang::expr(
+    rlang::expr(
       DEEBcmd::initOneEstimAutoHyper(
         dbPath = !!dbPath,
         runLocal = !!runLocal,
         parallel = !!parallel,
         methodInfo = !!methodInfo)
-    ))
-    startComp(
-      cmdText,
-      prefix = paste0("auto0_", methodInfo$model, "_", basename(methodInfo$methodFile)),
-      timeInMinutes = 60,
-      mail = FALSE,
-      dbPath = dbPath)
+    )
+  })
+  if (isSlurmAvailable()) {
+    evalExpressionListSlurmArray(
+      expressionList=exprList,
+      dbPath = dbPath,
+      autoId = NULL,
+      prefix="auto0",
+      timeInMinutes=60,
+      nCpus = 1,
+      mail=FALSE,
+      startAfterJobIds=NULL
+    )
+  } else {
+    evalExpressionList(dbPath, exprList, parallel = FALSE)
   }
   return(invisible())
 }
