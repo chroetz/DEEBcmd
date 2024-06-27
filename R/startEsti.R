@@ -201,7 +201,7 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
           jobDataRow$data[[1]]$expression,
           dbPath = dbPath,
           autoId = autoId,
-          prefix = "contOneEstimAutoHyper",
+          prefix = "contEstimAutoHyper",
           timeInMinutes = jobDataRow$timeInMinutes,
           nCpus = jobDataRow$nCpus,
           mail = FALSE,

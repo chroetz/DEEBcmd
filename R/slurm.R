@@ -20,7 +20,8 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail
     cat(command, "\n")
     output <- system(command, intern = TRUE)
     cat(output, "\n")
-    if (stringr::str_detect(output, stringr::fixed("error", ignore_case = TRUE))) {
+    if (is.character(output)) output <- paste(output, collapse="\n")
+    if (length(output) == 1 && stringr::str_detect(output, stringr::fixed("error", ignore_case = TRUE))) {
       logFailedSubmission(dbPath, autoId, output, command)
       return(NULL)
     }
@@ -54,6 +55,7 @@ startSlurmArray <- function(cmdFilePath, n, prefix, timeInMinutes, nCpus, mail, 
   cat(command, "\n")
   output <- system(command, intern = TRUE)
   cat(output, "\n")
+  if (is.character(output)) output <- paste(output, collapse="\n")
   if (length(output) == 1 && stringr::str_detect(output, stringr::fixed("error", ignore_case = TRUE))) {
     logFailedSubmission(dbPath, autoId, output, command)
     return(NULL)
