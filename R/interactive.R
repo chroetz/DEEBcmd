@@ -191,7 +191,7 @@ interactAutoHyper <- function(dbPath) {
 
 #' @export
 checkOptimizationScores <- function(dbPath) {
-# TODO
+
   cat("Scaning for possible choices...\n")
   methodTablePathsAll <- DEEBpath::getMethodTableNames(dbPath)
   methodTablePathsNames <- getUserInput(
@@ -214,7 +214,10 @@ checkOptimizationScores <- function(dbPath) {
 
   methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths)
 
-  outDir <- tempfile("checkScores_", tmpdir=DEEBpath::summaryDir(dbPath), fileext="")
+  outDir <- tempfile(
+    paste0("checkScores_", format(Sys.time(), "%Y-%m-%d-%H-%M-%S"), "_"),
+    tmpdir = DEEBpath::summaryDir(dbPath),
+    fileext = "")
   outFilePath <- paste0(outDir, ".csv")
 
   exprList <- lapply(seq_len(nrow(methodTable)), \(i) {
@@ -241,12 +244,12 @@ checkOptimizationScores <- function(dbPath) {
       dbPath = dbPath,
       autoId = NULL,
       prefix="check",
-      timeInMinutes=60,
+      timeInMinutes=2,
       nCpus = 1,
-      mail=FALSE,
-      startAfterJobIds=NULL
+      mail = FALSE,
+      startAfterJobIds = NULL
     )
-    startComp(rlang::expr_text(concatExpr), prefix="concat", timeInMinutes=10, nCpus=1, mail=FALSE, startAfterJobIds=jobIds)
+    startComp(rlang::expr_text(concatExpr), prefix="concat", timeInMinutes=10, nCpus=2, mail=TRUE, startAfterJobIds=jobIds)
   }
   return(invisible())
 }
