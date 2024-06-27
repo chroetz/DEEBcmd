@@ -35,7 +35,7 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail
 }
 
 
-startSlurmArray <- function(cmdFilePath, n, prefix, timeInMinutes, nCpus, mail, startAfterJobIds, dbPath=NULL, autoId=NULL) {
+startSlurmArray <- function(cmdFilePath, n, prefix, timeInMinutes, nCpus, mail, startAfterJobIds, dbPath=NULL, autoId=NULL, pause=60) {
   cmdFilePath <- normalizePath(cmdFilePath, winslash="/", mustWork=TRUE)
   jobName <- paste0(prefix, "_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
   cat("Starting SLURM array", jobName, "\n")
@@ -55,7 +55,7 @@ startSlurmArray <- function(cmdFilePath, n, prefix, timeInMinutes, nCpus, mail, 
     " --wrap=\'Rscript -e \"DEEBcmd::startArrayTask(\\\"", cmdFilePath,"\\\", $SLURM_ARRAY_TASK_ID)\"\'")
   cat(command, "\n")
   output <- system(command, intern = TRUE)
-  Sys.sleep(1)
+  Sys.sleep(pause)
   cat(output, "\n")
   if (is.character(output)) output <- paste(output, collapse="\n")
   if (length(output) == 1 && stringr::str_detect(output, stringr::fixed("error", ignore_case = TRUE))) {

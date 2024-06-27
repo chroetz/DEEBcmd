@@ -175,10 +175,11 @@ interactAutoHyper <- function(dbPath) {
       dbPath = dbPath,
       autoId = NULL,
       prefix="auto0",
-      timeInMinutes=60,
+      timeInMinutes=1440,
       nCpus = 1,
       mail=FALSE,
-      startAfterJobIds=NULL
+      startAfterJobIds=NULL,
+      pause=60
     )
   } else {
     evalExpressionList(dbPath, exprList, parallel = FALSE)
@@ -244,10 +245,11 @@ checkOptimizationScores <- function(dbPath) {
       dbPath = dbPath,
       autoId = NULL,
       prefix="check",
-      timeInMinutes=2,
+      timeInMinutes=10,
       nCpus = 1,
       mail = FALSE,
-      startAfterJobIds = NULL
+      startAfterJobIds = NULL,
+      pause = 1
     )
     startComp(rlang::expr_text(concatExpr), prefix="concat", timeInMinutes=10, nCpus=2, mail=TRUE, startAfterJobIds=jobIds)
   }
@@ -278,7 +280,8 @@ startEvalNewPerModel <- function(dbPath) {
       timeInMinutes=1440,
       nCpus = 1,
       mail=FALSE,
-      startAfterJobIds=NULL
+      startAfterJobIds=NULL,
+      pause=1
     )
   } else {
     parallel <- getUserInputYesNo("parallel?", "Yes")

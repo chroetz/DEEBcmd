@@ -48,7 +48,8 @@ startEstimHyper <- function(
           timeInMinutes = jobDataRow$timeInMinutes,
           nCpus = jobDataRow$nCpus,
           mail = FALSE,
-          startAfterJobIds = NULL
+          startAfterJobIds = NULL,
+          pause=1
         )
         jobIds <- c(jobIds, jobId)
       }
@@ -123,7 +124,8 @@ initOneEstimAutoHyper <- function(
           timeInMinutes = jobDataRow$timeInMinutes,
           nCpus = jobDataRow$nCpus,
           mail = FALSE,
-          startAfterJobIds = NULL
+          startAfterJobIds = NULL,
+          pause=60
         )
         jobIds <- c(jobIds, jobId)
       }
@@ -140,7 +142,7 @@ initOneEstimAutoHyper <- function(
   jobIds <- startComp(
     cmdText,
     prefix = "DEEBcmd-auto",
-    timeInMinutes = 60,
+    timeInMinutes = 1440,
     mail = FALSE,
     startAfterJobIds = jobIds,
     autoId=autoId,
@@ -205,7 +207,8 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
           timeInMinutes = jobDataRow$timeInMinutes,
           nCpus = jobDataRow$nCpus,
           mail = FALSE,
-          startAfterJobIds = NULL
+          startAfterJobIds = NULL,
+          pause=60
         )
         jobIds <- c(jobIds, jobId)
       }
@@ -222,7 +225,7 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
   jobIds <- startComp(
     cmdText,
     prefix = "DEEBcmd-auto",
-    timeInMinutes = 60,
+    timeInMinutes = 1440,
     mail = FALSE,
     startAfterJobIds = jobIds,
     dbPath = dbPath)
@@ -382,7 +385,8 @@ evalExpressionListSlurmArray <- function(
     timeInMinutes=NULL,
     nCpus = 1,
     mail=TRUE,
-    startAfterJobIds=NULL
+    startAfterJobIds=NULL,
+    pause = 60
 ) {
   if (length(expressionList) == 0) return(NULL)
   MaxArraySize <- 1000
@@ -398,7 +402,8 @@ evalExpressionListSlurmArray <- function(
       timeInMinutes=timeInMinutes,
       nCpus = nCpus,
       mail=mail,
-      startAfterJobIds=startAfterJobIds)
+      startAfterJobIds=startAfterJobIds,
+      pause=pause)
     return(res)
   }
   cmdDir <- DEEBpath::getCmdDir(dbPath, autoId)
@@ -415,5 +420,6 @@ evalExpressionListSlurmArray <- function(
     nCpus=nCpus, mail=mail,
     startAfterJobIds=startAfterJobIds,
     dbPath=dbPath,
-    autoId=autoId)
+    autoId=autoId,
+    pause = pause)
 }
