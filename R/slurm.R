@@ -54,7 +54,7 @@ startSlurmArray <- function(cmdFilePath, n, prefix, timeInMinutes, nCpus, mail, 
   cat(command, "\n")
   output <- system(command, intern = TRUE)
   cat(output, "\n")
-  if (stringr::str_detect(output, stringr::fixed("error", ignore_case = TRUE))) {
+  if (length(output) == 1 && stringr::str_detect(output, stringr::fixed("error", ignore_case = TRUE))) {
     logFailedSubmission(dbPath, autoId, output, command)
     return(NULL)
   }
@@ -66,8 +66,15 @@ startSlurmArray <- function(cmdFilePath, n, prefix, timeInMinutes, nCpus, mail, 
 #' @export
 startArrayTask <- function(cmdFilePath, arrayTaskNr) {
   cmdTextAll <- readLines(cmdFilePath)
-  startLineIdx <- stringr::str_which(cmdTextAll, paste0("# START ", arrayTaskNr))
-  endLineIdx <- stringr::str_which(cmdTextAll, paste0("# END ", arrayTaskNr))
+  startLineIdx <- stringr::str_which(cmdTextAll, stringr::fixed(paste0("# START ", arrayTaskNr)))
+  endLineIdx <- stringr::str_which(cmdTextAll,  stringr::fixed(paste0("# END ", arrayTaskNr)))
+  if (length(startLineIdx) != 1  || length(endLineIdx) != 1) {
+    stop(
+      "cmdFilePath=", cmdFilePath,
+      ",arrayTaskNr=", arrayTaskNr,
+      ",length(startLineIdx)=", length(startLineIdx),
+      ",length(endLineIdx)=", length(endLineIdx))
+  }
   stopifnot(length(startLineIdx) == 1)
   stopifnot(length(endLineIdx) == 1)
   stopifnot(startLineIdx+1 <= endLineIdx-1)
