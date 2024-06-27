@@ -170,7 +170,7 @@ interactAutoHyper <- function(dbPath) {
     )
   })
   if (isSlurmAvailable()) {
-    evalExpressionListSlurm(
+    startSlurmJobToEvalExpressionList(
       expressionList = exprList,
       dbPath = dbPath,
       autoId = NULL,
@@ -265,7 +265,7 @@ startEvalNewPerModel <- function(dbPath) {
         onlySummarizeScore = FALSE,
         autoId = NULL))})
   if (isSlurmAvailable()) {
-    evalExpressionListSlurm(
+    startSlurmJobToEvalExpressionList(
       expressionList = exprList,
       dbPath = dbPath,
       autoId = NULL,

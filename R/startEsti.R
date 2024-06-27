@@ -44,7 +44,7 @@ startEstimHyper <- function(
           jobDataRow$data[[1]]$expression,
           dbPath = dbPath,
           autoId = NULL,
-          prefix = "startEstimHyper",
+          prefix = "init",
           timeInMinutes = jobDataRow$timeInMinutes,
           nCpus = jobDataRow$nCpus
         )
@@ -117,7 +117,7 @@ initOneEstimAutoHyper <- function(
           jobDataRow$data[[1]]$expression,
           dbPath = dbPath,
           autoId = autoId,
-          prefix = "initEstimAutoHyper",
+          prefix = "init",
           timeInMinutes = jobDataRow$timeInMinutes,
           nCpus = jobDataRow$nCpus
         )
@@ -136,7 +136,7 @@ initOneEstimAutoHyper <- function(
   jobIds <- startComp(
     cmdText,
     prefix = "DEEBcmd-auto",
-    timeInMinutes = 1440,
+    timeInMinutes = 60,
     mail = FALSE,
     startAfterJobIds = jobIds,
     autoId=autoId,
@@ -197,7 +197,7 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
           jobDataRow$data[[1]]$expression,
           dbPath = dbPath,
           autoId = autoId,
-          prefix = "contEstimAutoHyper",
+          prefix = "init",
           timeInMinutes = jobDataRow$timeInMinutes,
           nCpus = jobDataRow$nCpus
         )
@@ -216,7 +216,7 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
   jobIds <- startComp(
     cmdText,
     prefix = "DEEBcmd-auto",
-    timeInMinutes = 1440,
+    timeInMinutes = 60,
     mail = FALSE,
     startAfterJobIds = jobIds,
     dbPath = dbPath)
@@ -367,6 +367,74 @@ evalExpressionList <- function(dbPath, expressionList, parallel = TRUE, numCores
   cat(format(Sys.time()), "\n")
   sink(file = NULL)
   return(results)
+}
+
+
+startSlurmJobToEvalExpressionList <- function(
+  expressionList,
+  dbPath,
+  autoId = NULL,
+  prefix = "DEEB",
+  timeInMinutes = NULL,
+  nCpus = 1,
+  startAfterJobIds=NULL
+) {
+  cmdDir <- DEEBpath::getCmdDir(dbPath, autoId)
+  if (!dir.exists(cmdDir))  dir.create(cmdDir)
+  cmdFilePath <- tempfile(paste0("cmd_", format(Sys.time(), "%Y-%m-%d-%H-%M-%S"), "_"), tmpdir=cmdDir, fileext=".txt")
+  exprTexts <- sapply(expressionList, rlang::expr_text)
+  n <- length(expressionList)
+  lines <- paste0("# START ", 1:n, "\n", exprTexts, "\n# END ", 1:n, "\n")
+  writeLines(lines, cmdFilePath)
+
+  expr <- rlang::expr(DEEBcmd::startSlurmJobListCarefully(
+    !!cmdFilePath,
+    dbPath = !!dbPath,
+    autoId = !!autoId,
+    prefix = !!prefix,
+    timeInMinutes = !!timeInMinutes,
+    nCpus = !!nCpus))
+
+  startComp(
+    rlang::expr_text(expr),
+    prefix = "starter",
+    timeInMinutes = 1440,
+    nCpus = 1,
+    startAfterJobIds = startAfterJobIds,
+    dbPath = dbPath,
+    autoId = autoId)
+}
+
+
+#' @export
+startSlurmJobListCarefully <- function(
+  cmdFilePath,
+  dbPath,
+  autoId,
+  prefix,
+  timeInMinutes,
+  nCpus
+) {
+
+  cmdTextAll <- readLines(cmdFilePath)
+  startLineIdx <- stringr::str_which(cmdTextAll, "^\\# START \\d+")
+  endLineIdx <- stringr::str_which(cmdTextAll, "^\\# END \\d+")
+  stopifnot(length(startLineIdx) == length(endLineIdx))
+  stopifnot(all(startLineIdx + 1 <= endLineIdx - 1))
+  exprList <- lapply(
+    seq_along(startLineIdx),
+    \(i) {
+      cmdText <- paste(cmdTextAll[(startLineIdx[i]+1):(endLineIdx[i]-1)], collapse="\n")
+      rlang::parse_expr(cmdText)
+    })
+
+  evalExpressionListSlurm(
+    exprList,
+    dbPath,
+    autoId,
+    prefix,
+    timeInMinutes,
+    nCpus)
 }
 
 
