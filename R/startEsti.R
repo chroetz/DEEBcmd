@@ -40,16 +40,13 @@ startEstimHyper <- function(
         tidyr::nest(data = c("methodName", "expansionNr", "expression", "prefix"))
       for (i in seq_len(nrow(jobData))) {
         jobDataRow <- jobData[i, ]
-        jobId <- evalExpressionListSlurmArray(
+        jobId <- evalExpressionListSlurm(
           jobDataRow$data[[1]]$expression,
           dbPath = dbPath,
           autoId = NULL,
           prefix = "startEstimHyper",
           timeInMinutes = jobDataRow$timeInMinutes,
-          nCpus = jobDataRow$nCpus,
-          mail = FALSE,
-          startAfterJobIds = NULL,
-          pause=1
+          nCpus = jobDataRow$nCpus
         )
         jobIds <- c(jobIds, jobId)
       }
@@ -122,10 +119,7 @@ initOneEstimAutoHyper <- function(
           autoId = autoId,
           prefix = "initEstimAutoHyper",
           timeInMinutes = jobDataRow$timeInMinutes,
-          nCpus = jobDataRow$nCpus,
-          mail = FALSE,
-          startAfterJobIds = NULL,
-          pause=60
+          nCpus = jobDataRow$nCpus
         )
         jobIds <- c(jobIds, jobId)
       }
@@ -205,10 +199,7 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
           autoId = autoId,
           prefix = "contEstimAutoHyper",
           timeInMinutes = jobDataRow$timeInMinutes,
-          nCpus = jobDataRow$nCpus,
-          mail = FALSE,
-          startAfterJobIds = NULL,
-          pause=60
+          nCpus = jobDataRow$nCpus
         )
         jobIds <- c(jobIds, jobId)
       }
@@ -379,47 +370,32 @@ evalExpressionList <- function(dbPath, expressionList, parallel = TRUE, numCores
 }
 
 
-evalExpressionListSlurmArray <- function(
-    expressionList, dbPath, autoId = NULL,
-    prefix="DEEB",
-    timeInMinutes=NULL,
-    nCpus = 1,
-    mail=TRUE,
-    startAfterJobIds=NULL,
-    pause = 60
+evalExpressionListSlurm <- function(
+  expressionList,
+  dbPath,
+  autoId = NULL,
+  prefix = "DEEB",
+  timeInMinutes = NULL,
+  nCpus = 1,
+  maxJobs = 300
 ) {
-  if (length(expressionList) == 0) return(NULL)
-  MaxArraySize <- 1000
-  if (length(expressionList) > MaxArraySize) {
-    groups <- ceiling(seq_along(expressionList) / MaxArraySize)
-    expressionListList <- split(expressionList, groups)
-    res <- sapply(
-      expressionListList,
-      evalExpressionListSlurmArray,
-      dbPath=dbPath,
-      autoId = autoId,
-      prefix=prefix,
+  jobIds <- numeric()
+  for (i in seq_along(expressionList)) {
+    z <- 0
+    while (getNumberOfActiveSlurmJobs() >= maxJobs) {
+      z <- z + 1
+      Sys.sleep(10 + sample.int(pmin(1000, 2^z), 1))
+    }
+    jobId <- startComp(
+      rlang::expr_text(expressionList[[i]]),
+      prefix==prefix,
       timeInMinutes=timeInMinutes,
-      nCpus = nCpus,
-      mail=mail,
-      startAfterJobIds=startAfterJobIds,
-      pause=pause)
-    return(res)
+      nCpus=nCpus,
+      mail=FALSE,
+      startAfterJobIds=NULL,
+      autoId=autoId,
+      dbPath=dbPath)
+    jobIds <- c(jobIds, jobId)
   }
-  cmdDir <- DEEBpath::getCmdDir(dbPath, autoId)
-  if (!dir.exists(cmdDir))  dir.create(cmdDir)
-  filePath <- tempfile(paste0("cmd_", format(Sys.time(), "%Y-%m-%d-%H-%M-%S"), "_"), tmpdir=cmdDir, fileext=".txt")
-  exprTexts <- sapply(expressionList, rlang::expr_text)
-  n <- length(expressionList)
-  lines <- paste0("# START ", 1:n, "\n", exprTexts, "\n# END ", 1:n, "\n")
-  writeLines(lines, filePath)
-  startSlurmArray(
-    filePath, n,
-    prefix=prefix,
-    timeInMinutes=timeInMinutes,
-    nCpus=nCpus, mail=mail,
-    startAfterJobIds=startAfterJobIds,
-    dbPath=dbPath,
-    autoId=autoId,
-    pause = pause)
+  return(jobIds)
 }

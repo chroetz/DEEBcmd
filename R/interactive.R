@@ -170,16 +170,13 @@ interactAutoHyper <- function(dbPath) {
     )
   })
   if (isSlurmAvailable()) {
-    evalExpressionListSlurmArray(
-      expressionList=exprList,
+    evalExpressionListSlurm(
+      expressionList = exprList,
       dbPath = dbPath,
       autoId = NULL,
-      prefix="auto0",
-      timeInMinutes=1440,
-      nCpus = 1,
-      mail=FALSE,
-      startAfterJobIds=NULL,
-      pause=60
+      prefix = "auto0",
+      timeInMinutes = 1440,
+      nCpus = 1
     )
   } else {
     evalExpressionList(dbPath, exprList, parallel = FALSE)
@@ -240,17 +237,13 @@ checkOptimizationScores <- function(dbPath) {
     evalExpressionList(dbPath, exprList, parallel = parallel)
     eval(concatExpr)
   } else {
-    jobIds <- evalExpressionListSlurmArray(
+    jobIds <- evalExpressionListSlurm(
       expressionList = exprList,
       dbPath = dbPath,
       autoId = NULL,
-      prefix="check",
-      timeInMinutes=10,
-      nCpus = 1,
-      mail = FALSE,
-      startAfterJobIds = NULL,
-      pause = 1
-    )
+      prefix = "check",
+      timeInMinutes = 10,
+      nCpus = 1)
     startComp(rlang::expr_text(concatExpr), prefix="concat", timeInMinutes=10, nCpus=2, mail=TRUE, startAfterJobIds=jobIds)
   }
   return(invisible())
@@ -272,17 +265,13 @@ startEvalNewPerModel <- function(dbPath) {
         onlySummarizeScore = FALSE,
         autoId = NULL))})
   if (isSlurmAvailable()) {
-    evalExpressionListSlurmArray(
-      expressionList=exprList,
+    evalExpressionListSlurm(
+      expressionList = exprList,
       dbPath = dbPath,
       autoId = NULL,
-      prefix="evalnew",
-      timeInMinutes=1440,
-      nCpus = 1,
-      mail=FALSE,
-      startAfterJobIds=NULL,
-      pause=1
-    )
+      prefix = "evalnew",
+      timeInMinutes = 1440,
+      nCpus = 1)
   } else {
     parallel <- getUserInputYesNo("parallel?", "Yes")
     evalExpressionList(dbPath, exprList, parallel = parallel)

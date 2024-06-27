@@ -109,3 +109,12 @@ logFailedSubmission <- function(dbPath, autoId, message, command) {
   filePath <- tempfile(paste0("failedSubmissions_", format(Sys.time(), "%Y-%m-%d-%H-%M-%S"), "_"), tmpdir=DEEBpath::getLogDir(dbPath), fileext = ".txt")
   writeLines(c(message,"\n",command,"\n",dbPath,"\n",autoId,"\n"), filePath)
 }
+
+
+getNumberOfActiveSlurmJobs <- function() {
+  nLines <-
+    system("squeue -u cschoetz | wc -l", intern=TRUE) |>
+    as.integer()
+  stopifnot(length(nLines) == 1 && !is.na(nLines))
+  return(nLines - 1)
+}
