@@ -452,7 +452,9 @@ evalExpressionListSlurm <- function(
     z <- 0
     while (getNumberOfActiveSlurmJobs() >= maxJobs) {
       z <- z + 1
-      Sys.sleep(10 + sample.int(pmin(1000, 2^z), 1))
+      waitTimeInSeconds <- 10 + sample.int(pmin(1000, 2^z), 1)
+      cat("Too many Jobs. Wait for", waitTimeInSeconds, "seconds.\n")
+      Sys.sleep(waitTimeInSeconds)
     }
     jobId <- startComp(
       rlang::expr_text(expressionList[[i]]),
