@@ -458,7 +458,7 @@ evalExpressionListSlurm <- function(
     }
     jobId <- startComp(
       rlang::expr_text(expressionList[[i]]),
-      prefix==prefix,
+      prefix=prefix,
       timeInMinutes=timeInMinutes,
       nCpus=nCpus,
       mail=FALSE,
