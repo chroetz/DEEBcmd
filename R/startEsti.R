@@ -113,7 +113,7 @@ initOneEstimAutoHyper <- function(
         tidyr::nest(data = c("methodName", "expansionNr", "expression", "prefix"))
       for (i in seq_len(nrow(jobData))) {
         jobDataRow <- jobData[i, ]
-        jobId <- evalExpressionListSlurmArray(
+        jobId <- evalExpressionListSlurm(
           jobDataRow$data[[1]]$expression,
           dbPath = dbPath,
           autoId = autoId,
@@ -193,7 +193,7 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
         tidyr::nest(data = c("methodName", "expansionNr", "expression", "prefix"))
       for (i in seq_len(nrow(jobData))) {
         jobDataRow <- jobData[i, ]
-        jobId <- evalExpressionListSlurmArray(
+        jobId <- evalExpressionListSlurm(
           jobDataRow$data[[1]]$expression,
           dbPath = dbPath,
           autoId = autoId,
