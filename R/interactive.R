@@ -33,6 +33,7 @@ askUserWhatToEval <- function(dbPath = ".") {
       "overall" = "DEEBeval: overall",
       "info" = "DEEBeval: collectInfo",
       "genCube" = "DEEBeval: generate best hypercube",
+      "checkOpti" = "DEEBeval: check scores for optimization of hyper parms",
       "copyBest" = "DEEBeval: copyBest",
       "copyRegex" = "DEEBeval: copy methods by RegEx",
       "clean" = "clean things (choose)"
@@ -55,6 +56,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     overall = startOverall(dbPath),
     info = startCollectInfo(dbPath),
     genCube = startGenCube(dbPath),
+    checkOpti = checkOptimizationScores(dbPath),
     copyBest = startCopyBest(dbPath),
     copyRegex = startCopyRegex(dbPath),
     clean = startCleanChoose(dbPath),
@@ -180,6 +182,71 @@ interactAutoHyper <- function(dbPath) {
     )
   } else {
     evalExpressionList(dbPath, exprList, parallel = FALSE)
+  }
+  return(invisible())
+}
+
+
+
+
+#' @export
+checkOptimizationScores <- function(dbPath) {
+# TODO
+  cat("Scaning for possible choices...\n")
+  methodTablePathsAll <- DEEBpath::getMethodTableNames(dbPath)
+  methodTablePathsNames <- getUserInput(
+    "Choose method tables(s)",
+    names(methodTablePathsAll),
+    multi = TRUE,
+    default = "all")
+  methodTablePaths <- methodTablePathsAll[methodTablePathsNames]
+  if (isSlurmAvailable()) {
+    runLocal <- FALSE
+    parallel <- FALSE
+  } else {
+    runLocal <- TRUE
+    parallel <- getUserInputYesNo("parallel?", "Yes")
+  }
+
+  if (length(methodTablePaths) == 0) {
+    stop("Did not find any method table name.")
+  }
+
+  methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths)
+
+  outDir <- tempfile("checkScores_", tmpdir=DEEBpath::summaryDir(dbPath), fileext="")
+  outFilePath <- paste0(outDir, ".csv")
+
+  exprList <- lapply(seq_len(nrow(methodTable)), \(i) {
+    methodInfo <- methodTable[i, ]
+    rlang::expr(
+      DEEBeval::getStateOfHyperParmOptimizationHasScore(
+        dbPath = !!dbPath,
+        methodTable = !!methodInfo,
+        outDir = !!outDir)
+    )
+  })
+  concatExpr <- rlang::expr(
+    DEEBcmd::concatCsv(
+      dirPath = !!outDir,
+      outFilePath = !!outFilePath,
+      removeDir = TRUE
+    ))
+  if (runLocal) {
+    evalExpressionList(dbPath, exprList, parallel = parallel)
+    eval(concatExpr)
+  } else {
+    jobIds <- evalExpressionListSlurmArray(
+      expressionList = exprList,
+      dbPath = dbPath,
+      autoId = NULL,
+      prefix="check",
+      timeInMinutes=60,
+      nCpus = 1,
+      mail=FALSE,
+      startAfterJobIds=NULL
+    )
+    startComp(rlang::expr_text(concatExpr), prefix="concat", timeInMinutes=10, nCpus=1, mail=FALSE, startAfterJobIds=jobIds)
   }
   return(invisible())
 }
