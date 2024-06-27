@@ -44,7 +44,7 @@ startEstimHyper <- function(
           jobDataRow$data[[1]]$expression,
           dbPath = dbPath,
           autoId = NULL,
-          prefix = "init",
+          prefix = "startEstimHyper",
           timeInMinutes = jobDataRow$timeInMinutes,
           nCpus = jobDataRow$nCpus
         )
@@ -117,7 +117,7 @@ initOneEstimAutoHyper <- function(
           jobDataRow$data[[1]]$expression,
           dbPath = dbPath,
           autoId = autoId,
-          prefix = "init",
+          prefix = "initEstimAutoHyper",
           timeInMinutes = jobDataRow$timeInMinutes,
           nCpus = jobDataRow$nCpus
         )
@@ -136,7 +136,7 @@ initOneEstimAutoHyper <- function(
   jobIds <- startComp(
     cmdText,
     prefix = "DEEBcmd-auto",
-    timeInMinutes = 60,
+    timeInMinutes = 1440,
     mail = FALSE,
     startAfterJobIds = jobIds,
     autoId=autoId,
@@ -197,7 +197,7 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
           jobDataRow$data[[1]]$expression,
           dbPath = dbPath,
           autoId = autoId,
-          prefix = "init",
+          prefix = "contEstimAutoHyper",
           timeInMinutes = jobDataRow$timeInMinutes,
           nCpus = jobDataRow$nCpus
         )
@@ -216,7 +216,7 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
   jobIds <- startComp(
     cmdText,
     prefix = "DEEBcmd-auto",
-    timeInMinutes = 60,
+    timeInMinutes = 1440,
     mail = FALSE,
     startAfterJobIds = jobIds,
     dbPath = dbPath)
