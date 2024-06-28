@@ -115,9 +115,14 @@ interactHyper <- function(dbPath) {
   forceOverwrite <- getUserInputYesNo(
     "Force overwrite?",
     default = "No")
-  runLocalParallel <- getUserInputYesNo(
-    "Run local and in parallel?",
-    default = "No")
+  runLocal <- getUserInputYesNo(
+    "Run local?",
+    default = if (isSlurmAvailable()) "No" else "Yes")
+  if (runLocal) {
+    parallel <- getUserInputYesNo(
+      "Run in parallel?",
+      default = "No")
+  }
   readyToStart <- getUserInputYesNo(
     "Ready to start?",
     default = "Yes")
@@ -127,8 +132,8 @@ interactHyper <- function(dbPath) {
       methodTable,
       truthNrFilter,
       forceOverwrite,
-      runLocal = runLocalParallel,
-      parallel = runLocalParallel
+      runLocal = runLocal,
+      parallel = parallel
     )
   return(invisible())
 }
