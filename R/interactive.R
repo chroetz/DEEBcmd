@@ -115,6 +115,9 @@ interactHyper <- function(dbPath) {
   forceOverwrite <- getUserInputYesNo(
     "Force overwrite?",
     default = "No")
+  runSummaryAfter <- getUserInputYesNo(
+    "Run Summary afterwards?",
+    default = "No")
   runLocal <- getUserInputYesNo(
     "Run local?",
     default = if (isSlurmAvailable()) "No" else "Yes")
@@ -132,6 +135,7 @@ interactHyper <- function(dbPath) {
       methodTable,
       truthNrFilter,
       forceOverwrite,
+      runSummaryAfter = runSummaryAfter,
       runLocal = runLocal,
       parallel = parallel
     )
