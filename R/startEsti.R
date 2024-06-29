@@ -385,7 +385,8 @@ startSlurmJobToEvalExpressionList <- function(
     prefix = "cmd",
     dirPath = cmdDir,
     identifyingObject = expressionList,
-    fileExtension = ".txt")
+    fileExtension = ".txt",
+    fullPath = TRUE)
   exprTexts <- sapply(expressionList, rlang::expr_text)
   n <- length(expressionList)
   lines <- paste0("# START ", 1:n, "\n", exprTexts, "\n# END ", 1:n, "\n")
