@@ -50,7 +50,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     evalAll = startEvaluation(dbPath, FALSE, TRUE, TRUE, FALSE),
     evalAllSumm = startEvaluation(dbPath, FALSE, FALSE, TRUE, FALSE),
     onlyScores = startEvaluation(dbPath, FALSE, FALSE, FALSE, FALSE),
-    onlyScoresAndCsv = startEvaluation(dbPath, FALSE, FALSE, TRUE, TRUE),
+    onlyScoresAndCsv = startEvaluationMultiJob(dbPath, FALSE, FALSE, TRUE, TRUE),
     onlyScoreHtml = startScoresHtml(dbPath),
     summaryChoose = startSummary(dbPath),
     overall = startOverall(dbPath),
@@ -431,6 +431,33 @@ startEvaluation <- function(dbPath, createPlots, writeScoreHtml, createSummary, 
     mail = TRUE,
     dbPath = dbPath
   )
+}
+
+startEvaluationMultiJob <- function(dbPath, createPlots, writeScoreHtml, createSummary, onlySummarizeScore) {
+  models <- DEEBpath::getModels(dbPath)
+  for (model in models) {
+    obsNrs <- DEEBpath::getObservationNrs(dbPath, model)
+    for (obsNr in obsNrs) {
+      startComp(
+        rlang::expr_text(rlang::expr(
+          DEEBeval::runEval(
+            dbPath = !!dbPath,
+            models = !!models,
+            obsNrFilter = !!obsNr,
+            createPlots = !!createPlots,
+            writeScoreHtml = !!writeScoreHtml,
+            createSummary = !!createSummary,
+            onlySummarizeScore = !!onlySummarizeScore,
+            verbose = FALSE
+          )
+        )),
+        prefix = "evalScore",
+        timeInMinutes = 1440,
+        mail = FALSE,
+        dbPath = dbPath
+      )
+    }
+  }
 }
 
 startScoresHtml <- function(dbPath) {
