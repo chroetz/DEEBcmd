@@ -106,7 +106,12 @@ extractJobId <- function(x) {
 
 
 logFailedSubmission <- function(dbPath, autoId, message, command) {
-  filePath <- tempfile(paste0("failedSubmissions_", format(Sys.time(), "%Y-%m-%d-%H-%M-%S"), "_"), tmpdir=DEEBpath::getLogDir(dbPath), fileext = ".txt")
+  filePath <- DEEButil::getUniqueFileName(
+    dirPath = DEEBpath::getLogDir(dbPath),
+    prefix = "failedSubmissions",
+    timeStamp = TRUE,
+    fileExtension = ".txt",
+    fullPath = TRUE)
   writeLines(c(message,"\n",command,"\n",dbPath,"\n",autoId,"\n"), filePath)
 }
 

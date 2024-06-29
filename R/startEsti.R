@@ -381,7 +381,11 @@ startSlurmJobToEvalExpressionList <- function(
 ) {
   cmdDir <- DEEBpath::getCmdDir(dbPath, autoId)
   if (!dir.exists(cmdDir))  dir.create(cmdDir)
-  cmdFilePath <- tempfile(paste0("cmd_", format(Sys.time(), "%Y-%m-%d-%H-%M-%S"), "_"), tmpdir=cmdDir, fileext=".txt")
+  cmdFilePath <- DEEButil::getUniqueFileName(
+    prefix = "cmd",
+    dirPath = cmdDir,
+    identifyingObject = expressionList,
+    fileExtension = ".txt")
   exprTexts <- sapply(expressionList, rlang::expr_text)
   n <- length(expressionList)
   lines <- paste0("# START ", 1:n, "\n", exprTexts, "\n# END ", 1:n, "\n")
@@ -465,7 +469,7 @@ evalExpressionListSlurm <- function(
       startAfterJobIds = NULL,
       autoId = autoId,
       dbPath = dbPath,
-      pause = 1)
+      pause = 0)
     jobIds <- c(jobIds, jobId)
   }
   return(jobIds)

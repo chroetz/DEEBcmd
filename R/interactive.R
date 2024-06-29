@@ -221,10 +221,12 @@ checkOptimizationScores <- function(dbPath) {
 
   methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths)
 
-  outDir <- tempfile(
-    paste0("checkScores_", format(Sys.time(), "%Y-%m-%d-%H-%M-%S"), "_"),
-    tmpdir = DEEBpath::summaryDir(dbPath),
-    fileext = "")
+  outDir <- DEEButil::getUniqueFileName(
+    prefix = "checkScores",
+    timeStamp = TRUE,
+    dirPath = DEEBpath::summaryDir(dbPath),
+    fileExtension = "",
+    fullPath = TRUE)
   outFilePath <- paste0(outDir, ".csv")
 
   exprList <- lapply(seq_len(nrow(methodTable)), \(i) {
@@ -522,7 +524,11 @@ startCollectInfo <- function(dbPath) {
 
 startGenCube <- function(dbPath, startAfterJobIds = NULL, methodTable = NULL, autoId = NULL) {
   if (hasValue(methodTable)) {
-    filePath <- tempfile(pattern = "methodsTable", tmpdir = DEEBpath::autoIdDir(dbPath, autoId), fileext = ".csv")
+    filePath <- DEEButil::getUniqueFileName(
+      prefix = "methodsTable",
+      dirPath = DEEBpath::autoIdDir(dbPath, autoId),
+      fileExtension = ".csv",
+      fullPath = TRUE)
     readr::write_csv(methodTable, filePath)
   } else {
     filePath <- NULL
