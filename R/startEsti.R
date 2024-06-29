@@ -445,7 +445,7 @@ evalExpressionListSlurm <- function(
   prefix = "DEEB",
   timeInMinutes = NULL,
   nCpus = 1,
-  maxJobs = 800
+  maxJobs = 400
 ) {
   jobIds <- numeric()
   for (i in seq_along(expressionList)) {
@@ -458,13 +458,14 @@ evalExpressionListSlurm <- function(
     }
     jobId <- startComp(
       rlang::expr_text(expressionList[[i]]),
-      prefix=prefix,
-      timeInMinutes=timeInMinutes,
-      nCpus=nCpus,
-      mail=FALSE,
-      startAfterJobIds=NULL,
-      autoId=autoId,
-      dbPath=dbPath)
+      prefix = prefix,
+      timeInMinutes = timeInMinutes,
+      nCpus = nCpus,
+      mail = FALSE,
+      startAfterJobIds = NULL,
+      autoId = autoId,
+      dbPath = dbPath,
+      pause = 1)
     jobIds <- c(jobIds, jobId)
   }
   return(jobIds)

@@ -1,5 +1,5 @@
 #' @export
-startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail=TRUE, startAfterJobIds=NULL, autoId = NULL, dbPath = NULL) {
+startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail=TRUE, startAfterJobIds=NULL, autoId = NULL, dbPath = NULL, pause = 0) {
   cat("startComp():", format(Sys.time()), "\n")
   if (isSlurmAvailable()) {
     jobName <- paste0(prefix, "_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
@@ -20,6 +20,7 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail
     cat(command, "\n")
     output <- system(command, intern = TRUE)
     cat(output, "\n")
+    if (pause > 0) Sys.sleep(pause)
     if (is.character(output)) output <- paste(output, collapse="\n")
     if (length(output) == 1 && stringr::str_detect(output, stringr::fixed("error", ignore_case = TRUE))) {
       logFailedSubmission(dbPath, autoId, output, command)
