@@ -76,6 +76,8 @@ initOneEstimAutoHyper <- function(
     runLocal = runLocal,
     parallel = parallel)
 
+  cat("autoId: ", autoId, "\n")
+
   jobCollection <- collectJobs(
     dbPath,
     methodInfo,
@@ -139,7 +141,7 @@ initOneEstimAutoHyper <- function(
     timeInMinutes = 1440,
     mail = FALSE,
     startAfterJobIds = jobIds,
-    autoId=autoId,
+    autoId = autoId,
     dbPath = dbPath)
 
   return(jobIds)
@@ -148,6 +150,8 @@ initOneEstimAutoHyper <- function(
 
 #' @export
 continueOneEstimAutoHyper <- function(dbPath, autoId) {
+
+  cat("autoId: ", autoId, "\n")
 
   methodInfo <- DEEBpath::readAutoInfo(dbPath, autoId)
   methodTableNames <- DEEBpath::getMethodTableNames(dbPath, autoId)
@@ -219,6 +223,7 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
     timeInMinutes = 1440,
     mail = FALSE,
     startAfterJobIds = jobIds,
+    autoId = autoId,
     dbPath = dbPath)
 
   return(jobIds)
@@ -435,11 +440,11 @@ startSlurmJobListCarefully <- function(
 
   evalExpressionListSlurm(
     exprList,
-    dbPath,
-    autoId,
-    prefix,
-    timeInMinutes,
-    nCpus)
+    dbPath = dbPath,
+    autoId = autoId,
+    prefix = prefix,
+    timeInMinutes = timeInMinutes,
+    nCpus = nCpus)
 }
 
 

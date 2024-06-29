@@ -332,7 +332,7 @@ startNewEvalAuto <- function(dbPath, startAfterJobIds = NULL, autoId = NULL, aut
     timeInMinutes = 1440,
     mail = FALSE,
     startAfterJobIds = startAfterJobIds,
-    autoId=autoId,
+    autoId = autoId,
     dbPath = dbPath
   )
   return(jobId)
@@ -540,7 +540,7 @@ startGenCube <- function(dbPath, startAfterJobIds = NULL, methodTable = NULL, au
     timeInMinutes = 1440,
     mail = FALSE,
     startAfterJobIds = startAfterJobIds,
-    autoId=autoId,
+    autoId = autoId,
     dbPath = dbPath)
   return(jobId)
 }
