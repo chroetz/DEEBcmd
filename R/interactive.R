@@ -436,27 +436,23 @@ startEvaluation <- function(dbPath, createPlots, writeScoreHtml, createSummary, 
 startEvaluationMultiJob <- function(dbPath, createPlots) {
   models <- DEEBpath::getModels(dbPath)
   for (model in models) {
-    obsNrs <- DEEBpath::getObservationNrs(dbPath, model)
-    for (obsNr in obsNrs) {
-      startComp(
-        rlang::expr_text(rlang::expr(
-          DEEBeval::runEval(
-            dbPath = !!dbPath,
-            models = !!model,
-            obsNrFilter = !!obsNr,
-            createPlots = !!createPlots,
-            writeScoreHtml = FALSE,
-            createSummary = FALSE,
-            onlySummarizeScore = FALSE,
-            verbose = FALSE
-          )
-        )),
-        prefix = "evalScore",
-        timeInMinutes = 1440,
-        mail = FALSE,
-        dbPath = dbPath
-      )
-    }
+    startComp(
+      rlang::expr_text(rlang::expr(
+        DEEBeval::runEval(
+          dbPath = !!dbPath,
+          models = !!model,
+          createPlots = !!createPlots,
+          writeScoreHtml = FALSE,
+          createSummary = FALSE,
+          onlySummarizeScore = FALSE,
+          verbose = FALSE
+        )
+      )),
+      prefix = "evalScore",
+      timeInMinutes = 1440,
+      mail = FALSE,
+      dbPath = dbPath
+    )
   }
 }
 
