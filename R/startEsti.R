@@ -134,16 +134,16 @@ initOneEstimAutoHyper <- function(
   cmdText <-  rlang::expr_text(rlang::expr(
     DEEBcmd::continueOneEstimAutoHyper(!!dbPath, autoId = !!autoId, cubeId = !!cubeId)
   ))
-  jobIds <- startComp(
+  jobId <- startComp(
     cmdText,
     prefix = "DEEBcmd-auto",
     timeInMinutes = 1440,
     mail = FALSE,
-    startAfterJobIds = jobIds,
+    startAfterJobIds = jobId,
     autoId = autoId,
     dbPath = dbPath)
 
-  return(jobIds)
+  return(jobId)
 }
 
 
@@ -161,7 +161,6 @@ continueOneEstimAutoHyper <- function(dbPath, autoId, cubeId) {
   if (!file.exists(methodTableFilePath)) {
     stop("continueOneEstimAutoHyper cannot find cube file: ", methodTableFilePath)
   }
-  stopifnot(file.exists(methodTableFilePath))
   methodTable <- DEEBpath::getMethodTable(dbPath, methodTableFilePath)
 
   pastJobs <- DEEBpath::getPastJobs(dbPath, autoId)
@@ -220,16 +219,16 @@ continueOneEstimAutoHyper <- function(dbPath, autoId, cubeId) {
   cmdText <-  rlang::expr_text(rlang::expr(
     DEEBcmd::continueOneEstimAutoHyper(!!dbPath, autoId = !!autoId, cubeId = !!cubeId)
   ))
-  jobIds <- startComp(
+  jobId <- startComp(
     cmdText,
     prefix = "DEEBcmd-auto",
     timeInMinutes = 1440,
     mail = FALSE,
-    startAfterJobIds = jobIds,
+    startAfterJobIds = jobId,
     autoId = autoId,
     dbPath = dbPath)
 
-  return(jobIds)
+  return(jobId)
 }
 
 
