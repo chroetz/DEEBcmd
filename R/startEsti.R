@@ -273,6 +273,12 @@ collectJobs <- function(
       }
       if (length(openTruthNrs) == 0) {
         cat("All results seem to exist. Skipping.\n")
+        print(openTruthNrs)
+        print(dbPath)
+        print(truthNrFilter)
+        print(obsNr)
+        print(methodInfo$model)
+        print(hyperParms$name)
         nSkipped <- nSkipped + 1
         next
       }
