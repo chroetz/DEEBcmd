@@ -151,12 +151,16 @@ initOneEstimAutoHyper <- function(
 continueOneEstimAutoHyper <- function(dbPath, autoId, cubeId) {
 
   cat("autoId: ", autoId, "\n")
+  cat("cubeId: ", cubeId, "\n")
 
   methodInfo <- DEEBpath::readAutoInfo(dbPath, autoId)
 
   methodTableFilePath <- file.path(
     DEEBpath::autoIdDir(dbPath, autoId),
     paste0(cubeId,".csv"))
+  if (!file.exists(methodTableFilePath)) {
+    stop("continueOneEstimAutoHyper cannot find cube file: ", methodTableFilePath)
+  }
   stopifnot(file.exists(methodTableFilePath))
   methodTable <- DEEBpath::getMethodTable(dbPath, methodTableFilePath)
 
