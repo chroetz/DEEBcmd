@@ -31,6 +31,7 @@ startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail
   } else {
     cat("No slurm. Evaluating following R expression directly:\n", cmdStr, "\n", sep="")
     eval(rlang::parse_expr(cmdStr))
+    return(rlang::hash(cmdStr))
   }
 }
 

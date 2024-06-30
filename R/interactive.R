@@ -326,6 +326,7 @@ startNewEvalAuto <- function(dbPath, startAfterJobIds = NULL, autoId = NULL, aut
         autoId = !!autoId
       )
     ))
+
   jobId <- startComp(
     cmd,
     prefix = "DEEBeval-runEvalTbl-all",
@@ -335,6 +336,7 @@ startNewEvalAuto <- function(dbPath, startAfterJobIds = NULL, autoId = NULL, aut
     autoId = autoId,
     dbPath = dbPath
   )
+
   return(jobId)
 }
 
@@ -522,20 +524,23 @@ startCollectInfo <- function(dbPath) {
 }
 
 
-startGenCube <- function(dbPath, startAfterJobIds = NULL, methodTable = NULL, autoId = NULL) {
+startGenCube <- function(dbPath, cubeId = NULL, startAfterJobIds = NULL, methodTable = NULL, autoId = NULL) {
+
   if (hasValue(methodTable)) {
     filePath <- DEEButil::getUniqueFileName(
       prefix = "methodsTable",
       dirPath = DEEBpath::autoIdDir(dbPath, autoId),
       fileExtension = ".csv",
       fullPath = TRUE)
+
     readr::write_csv(methodTable, filePath)
+
   } else {
     filePath <- NULL
   }
   jobId <- startComp(
     rlang::expr_text(rlang::expr(
-      DEEBeval::generateBestHyperCube(!!dbPath, !!filePath, !!autoId))),
+      DEEBeval::generateBestHyperCube(!!dbPath, !!filePath, !!autoId, cubeId=!!cubeId))),
     prefix = "DEEBeval-genCube",
     timeInMinutes = 1440,
     mail = FALSE,

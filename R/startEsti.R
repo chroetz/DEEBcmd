@@ -70,6 +70,8 @@ initOneEstimAutoHyper <- function(
   methodInfo
 ) {
 
+  methodInfo <- tibble::as_tibble(methodInfo)
+
   autoId <- DEEBpath::initializeAuto(
     dbPath,
     methodInfo,
@@ -127,13 +129,10 @@ initOneEstimAutoHyper <- function(
       }
     }
   }
-
-  jobIds <- startNewEvalAuto(dbPath, startAfterJobIds = jobIds, autoId = autoId, autoRound = autoRound)
-
-  jobIds <- startGenCube(dbPath, jobIds, methodInfo, autoId = autoId)
-
+  cubeId <- startNewEvalAuto(dbPath, startAfterJobIds = jobIds, autoId = autoId, autoRound = autoRound)
+  jobId <- startGenCube(dbPath, cubeId=cubeId, startAfterJobIds=cubeId, methodTable=methodInfo, autoId = autoId)
   cmdText <-  rlang::expr_text(rlang::expr(
-    DEEBcmd::continueOneEstimAutoHyper(!!dbPath, autoId = !!autoId)
+    DEEBcmd::continueOneEstimAutoHyper(!!dbPath, autoId = !!autoId, cubeId = !!cubeId)
   ))
   jobIds <- startComp(
     cmdText,
@@ -149,14 +148,18 @@ initOneEstimAutoHyper <- function(
 
 
 #' @export
-continueOneEstimAutoHyper <- function(dbPath, autoId) {
+continueOneEstimAutoHyper <- function(dbPath, autoId, cubeId) {
 
   cat("autoId: ", autoId, "\n")
 
   methodInfo <- DEEBpath::readAutoInfo(dbPath, autoId)
-  methodTableNames <- DEEBpath::getMethodTableNames(dbPath, autoId)
-  i <- which.max(as.integer(stringr::str_extract(methodTableNames, "_(\\d+)\\.csv$", group=1)))
-  methodTable <- DEEBpath::getMethodTable(dbPath, methodTableNames[i])
+
+  methodTableFilePath <- list.files(
+    DEEBpath::autoIdDir(dbPath, autoId),
+    paste0("^BestCube_", cubeId,".*\\.csv$"),
+    full.names=TRUE)
+  stopifnot(length(methodTableFilePath) == 1)
+  methodTable <- DEEBpath::getMethodTable(dbPath, methodTableFilePath)
 
   pastJobs <- DEEBpath::getPastJobs(dbPath, autoId)
 
@@ -209,13 +212,10 @@ continueOneEstimAutoHyper <- function(dbPath, autoId) {
       }
     }
   }
-
-  jobIds <- startNewEvalAuto(dbPath, startAfterJobIds = jobIds, autoId = autoId, autoRound = autoRound)
-
-  jobIds <- startGenCube(dbPath, jobIds, methodTable, autoId = autoId)
-
+  cubeId <- startNewEvalAuto(dbPath, startAfterJobIds = jobIds, autoId = autoId, autoRound = autoRound)
+  jobId <- startGenCube(dbPath, cubeId=cubeId, startAfterJobIds=cubeId, methodTable = methodTable, autoId = autoId)
   cmdText <-  rlang::expr_text(rlang::expr(
-    DEEBcmd::continueOneEstimAutoHyper(!!dbPath, autoId = !!autoId)
+    DEEBcmd::continueOneEstimAutoHyper(!!dbPath, autoId = !!autoId, cubeId = !!cubeId)
   ))
   jobIds <- startComp(
     cmdText,
@@ -358,14 +358,18 @@ evalExpressionList <- function(dbPath, expressionList, parallel = TRUE, numCores
     return(results)
   }
 
-  cat("Run", length(expressionList), " expressions sequentially.\n")
-  results <- lapply(expressionList, \(expr) {
+  cat("Run", length(expressionList), "expressions sequentially.\n")
+  results <- lapply(seq_along(expressionList), \(i) {
+    expr <- expressionList[[i]]
     cat(format(Sys.time()), "\n")
-    cat("Run following expression:\n")
+    cat(sprintf("Run following expression (%i/%i):\n", i, length(expressionList)))
     cat(rlang::expr_text(expr), "\n")
     res <- evalSave(expr)
     if (inherits(res, c("error", "condition"))) {
       cat("ERROR:", res$message, "\n")
+      print(expr)
+      print(res)
+      stop()
     }
   })
   cat("Done evalutating expression list.\n")
