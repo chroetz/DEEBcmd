@@ -154,11 +154,10 @@ continueOneEstimAutoHyper <- function(dbPath, autoId, cubeId) {
 
   methodInfo <- DEEBpath::readAutoInfo(dbPath, autoId)
 
-  methodTableFilePath <- list.files(
+  methodTableFilePath <- file.path(
     DEEBpath::autoIdDir(dbPath, autoId),
-    paste0("^BestCube_", cubeId,".*\\.csv$"),
-    full.names=TRUE)
-  stopifnot(length(methodTableFilePath) == 1)
+    paste0(cubeId,".csv"))
+  stopifnot(file.exists(methodTableFilePath))
   methodTable <- DEEBpath::getMethodTable(dbPath, methodTableFilePath)
 
   pastJobs <- DEEBpath::getPastJobs(dbPath, autoId)
