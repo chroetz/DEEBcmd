@@ -476,7 +476,7 @@ evalExpressionListSlurm <- function(
   prefix = "DEEB",
   timeInMinutes = NULL,
   nCpus = 1,
-  maxJobs = 400
+  maxJobs = 4000
 ) {
   jobIds <- numeric()
   for (i in seq_along(expressionList)) {
