@@ -120,3 +120,9 @@ getUserInputDeebDb <- function(startDir) {
   stop("getUserInputDeebDb loop ended unexpectedly.")
 }
 
+
+getUserInputInteger <- function(title, default) {
+  cat(title, "\ndefault:", default, "\n")
+  getLine() |> as.integer()
+}
+

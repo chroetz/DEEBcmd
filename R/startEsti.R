@@ -6,7 +6,8 @@ startEstimHyper <- function(
   forceOverwrite = FALSE,
   runSummaryAfter = TRUE,
   runLocal = FALSE,
-  parallel = FALSE
+  parallel = FALSE,
+  splitByTruthNr = FALSE
 ) {
 
   jobCollection <- collectJobs(
@@ -14,7 +15,8 @@ startEstimHyper <- function(
     methodTable,
     truthNrFilter,
     forceOverwrite,
-    pastJobs = NULL
+    pastJobs = NULL,
+    splitByTruth = splitByTruthNr
   )
 
   cat("There are", jobCollection$n, "jobs to do;", jobCollection$nSkipped, "others were skipped.\n")
@@ -238,7 +240,8 @@ collectJobs <- function(
   methodTable,
   truthNrFilter,
   forceOverwrite,
-  pastJobs
+  pastJobs,
+  splitByTruth = FALSE
 ) {
 
   nSkipped <- 0
@@ -285,15 +288,27 @@ collectJobs <- function(
         next
       }
       cat(length(openTruthNrs), "new openTruthNrs. Adding job to list.\n")
-      expr <- rlang::expr(
-          DEEBesti::runOne(
-            dbPath = !!dbPath,
-            truthNrFilter = !!openTruthNrs,
-            obsNr = !!obsNr,
-            model = !!methodInfo$model,
-            method = !!methodInfo$methodFile,
-            expansionNr = !!expansionNr)
-        )
+      if (splitByTruth) {
+        exprs <- lapply(openTruthNrs, \(truthNr) {
+          rlang::expr(
+            DEEBesti::runOne(
+              dbPath = !!dbPath,
+              truthNrFilter = !!truthNr,
+              obsNr = !!obsNr,
+              model = !!methodInfo$model,
+              method = !!methodInfo$methodFile,
+              expansionNr = !!expansionNr))
+        })
+      } else {
+        exprs <- list(rlang::expr(
+            DEEBesti::runOne(
+              dbPath = !!dbPath,
+              truthNrFilter = !!openTruthNrs,
+              obsNr = !!obsNr,
+              model = !!methodInfo$model,
+              method = !!methodInfo$methodFile,
+              expansionNr = !!expansionNr)))
+      }
       prefix <- if (is.null(expansionNr)) {
           paste("DEEBesti", methodInfo$model, basename(methodInfo$methodFile), sep="-")
         } else {
@@ -305,7 +320,7 @@ collectJobs <- function(
           dplyr::tibble(
             methodName = hyperParms$name,
             expansionNr = expansionNr,
-            expression = list(expr),
+            expression = exprs,
             prefix = prefix,
             obsNr = obsNr
           ),
