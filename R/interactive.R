@@ -509,7 +509,7 @@ startOverall <- function(dbPath) {
   startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::createOverall(!!dbPath))),
-    prefix = "DEEBeval-overall",
+    prefix = "Overall",
     timeInMinutes = 1440,
     mail = TRUE,
     dbPath = dbPath)
@@ -520,8 +520,9 @@ startCollectInfo <- function(dbPath) {
   startComp(
     rlang::expr_text(rlang::expr(
       DEEBeval::writeInfo(!!dbPath))),
-    prefix = "DEEBeval-overall",
+    prefix = "CollTimeInfo",
     timeInMinutes = 1440,
+    nCpus = 4,
     mail = TRUE,
     dbPath = dbPath)
 }
