@@ -29,6 +29,7 @@ askUserWhatToEval <- function(dbPath = ".") {
       "onlyScores" = "DEEBeval: all, no plots, no scoreHTML, no summary",
       "onlyScoresAndCsv" = "DEEBeval: all multijob",
       "onlyScoreHtml" = "DEEBeval: only scoreHTML",
+      "onlyPlotting" = "DEEBeval: only plots",
       "summaryChoose" = "DEEBeval: summary choose",
       "overall" = "DEEBeval: overall",
       "info" = "DEEBeval: collectInfo",
@@ -52,6 +53,7 @@ askUserWhatToEval <- function(dbPath = ".") {
     onlyScores = startEvaluation(dbPath, FALSE, FALSE, FALSE, FALSE),
     onlyScoresAndCsv = startEvaluationMultiJob(dbPath, FALSE),
     onlyScoreHtml = startScoresHtml(dbPath),
+    onlyPlotting = startPlotting(dbPath),
     summaryChoose = startSummary(dbPath),
     overall = startOverall(dbPath),
     info = startCollectInfo(dbPath),
@@ -469,9 +471,23 @@ startScoresHtml <- function(dbPath) {
     startComp(
       rlang::expr_text(rlang::expr(
         DEEBeval::runScoreHtml(!!dbPath, !!model))),
-      prefix = paste0("DEEBeval-scoresHtml-", model),
+      prefix = paste0("scoresHtml-", model),
       timeInMinutes = 1440,
-      mail = TRUE,
+      mail = FALSE,
+      dbPath = dbPath)
+  }
+}
+
+
+startPlotting <- function(dbPath) {
+  models <- DEEBpath::getModels(dbPath)
+  for (model in models) {
+    startComp(
+      rlang::expr_text(rlang::expr(
+        DEEBeval::runPlotting(!!dbPath, !!model))),
+      prefix = paste0("plot-", model),
+      timeInMinutes = 1440,
+      mail = FALSE,
       dbPath = dbPath)
   }
 }
