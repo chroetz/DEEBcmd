@@ -266,7 +266,7 @@ collectJobs <- function(
     hyperParmsList <- DEEBesti::loadAsHyperParmsList(dbPath, methodInfo$methodFile)
     for (expansionNr in seq_along(hyperParmsList$list)) {
       hyperParms <- hyperParmsList$list[[expansionNr]]
-      cat(hyperParms$name, ": ", sep="")
+      cat(methodInfo$model, "", hyperParms$name, ": ", sep="")
       if (forceOverwrite) {
         openTruthNrs <- truthNrFilter
       } else {

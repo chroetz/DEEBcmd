@@ -555,9 +555,9 @@ startGenCube <- function(dbPath, cubeId = NULL, startAfterJobIds = NULL, methodT
 
     methodTable <- # DEEBpath::getMethodTable() reads this later and expands regex for mode and obs
       methodTable |>
-      mutate(
-        model = paste0("^", model, "$"),
-        obs = paste0("^", obs, "$"))
+      dplyr::mutate(
+        model = paste0("^", .data$model, "$"),
+        obs = paste0("^", .data$obs, "$"))
     readr::write_csv(methodTable, filePath)
 
   } else {
