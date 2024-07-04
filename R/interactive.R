@@ -87,7 +87,7 @@ interactHyper <- function(dbPath) {
     multi = TRUE,
     default = "all")
   methodTableNamesChosen <- methodTableNamesAll[methodTableNamesChosenName]
-  methodTable <- DEEBpath::getMethodTable(dbPath, methodTableNamesChosen)
+  methodTable <- DEEBpath::getMethodTable(dbPath, methodTableNamesChosen)  # Expands RegEx!!
   modelFilter <- getUserInput(
     "Choose model(s)",
     methodTable$model |> unique(),
@@ -171,7 +171,7 @@ interactAutoHyper <- function(dbPath) {
     stop("Did not find any method table name.")
   }
 
-  methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths)
+  methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths) # Expands RegEx!!
 
   exprList <- lapply(seq_len(nrow(methodTable)), \(i) {
     methodInfo <- methodTable[i, ]
@@ -224,7 +224,7 @@ checkOptimizationScores <- function(dbPath) {
     stop("Did not find any method table name.")
   }
 
-  methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths)
+  methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths)  # Expands RegEx!!
 
   outDir <- DEEButil::getUniqueFileName(
     prefix = "checkScores",
@@ -553,6 +553,11 @@ startGenCube <- function(dbPath, cubeId = NULL, startAfterJobIds = NULL, methodT
       fileExtension = ".csv",
       fullPath = TRUE)
 
+    methodTable <- # DEEBpath::getMethodTable() reads this later and expands regex for mode and obs
+      methodTable |>
+      mutate(
+        model = paste0("^", model, "$"),
+        obs = paste0("^", obs, "$"))
     readr::write_csv(methodTable, filePath)
 
   } else {

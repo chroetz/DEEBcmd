@@ -132,7 +132,7 @@ initOneEstimAutoHyper <- function(
     }
   }
   cubeId <- startNewEvalAuto(dbPath, startAfterJobIds = jobIds, autoId = autoId, autoRound = autoRound)
-  jobId <- startGenCube(dbPath, cubeId=cubeId, startAfterJobIds=cubeId, methodTable=methodInfo, autoId = autoId)
+  jobId <- startGenCube(dbPath, cubeId=cubeId, startAfterJobIds=cubeId, methodTable = methodInfo, autoId = autoId)
   cmdText <-  rlang::expr_text(rlang::expr(
     DEEBcmd::continueOneEstimAutoHyper(!!dbPath, autoId = !!autoId, cubeId = !!cubeId)
   ))
@@ -163,7 +163,7 @@ continueOneEstimAutoHyper <- function(dbPath, autoId, cubeId) {
   if (!file.exists(methodTableFilePath)) {
     stop("continueOneEstimAutoHyper cannot find cube file: ", methodTableFilePath)
   }
-  methodTable <- DEEBpath::getMethodTable(dbPath, methodTableFilePath)
+  methodTable <- DEEBpath::getMethodTable(dbPath, methodTableFilePath) # Expands Regex!!
 
   pastJobs <- DEEBpath::getPastJobs(dbPath, autoId)
 
