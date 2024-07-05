@@ -516,6 +516,7 @@ startSummary <- function(dbPath) {
         renderHyper = !!renderHyper))),
     prefix = "DEEBeval-summary",
     timeInMinutes = 1440,
+    nCpus = 4,
     mail = TRUE,
     dbPath = dbPath)
 }
