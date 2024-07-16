@@ -102,7 +102,7 @@ interactHyper <- function(dbPath) {
   methodTable <- methodTable |> dplyr::filter(.data$obs %in% obsNameFilter)
   methodsFilter <- getUserInput(
     "Choose method file(s)",
-    methodTable$methodFile |> unique(),
+    methodTable$methodFile |> unique() |> sort(),
     multi = TRUE,
     default = "all")
   methodTable <- methodTable |> dplyr::filter(.data$methodFile %in% methodsFilter)
