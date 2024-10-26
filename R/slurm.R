@@ -1,22 +1,57 @@
 #' @export
-startComp <- function(cmdStr, prefix="DEEB", timeInMinutes=NULL, nCpus = 1, mail=TRUE, startAfterJobIds=NULL, autoId = NULL, dbPath = NULL, pause = 0) {
+startComp <- function(
+  cmdStr,
+  prefix="DEEB",
+  timeInMinutes=NULL,
+  nCpus = 1,
+  mail=TRUE,
+  startAfterJobIds=NULL,
+  autoId = NULL,
+  dbPath = NULL,
+  pause = 0,
+  gpu = FALSE
+) {
   cat("startComp():", format(Sys.time()), "\n")
   if (isSlurmAvailable()) {
     jobName <- paste0(prefix, "_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
     cat("Starting SLURM job", jobName, "\n")
     logDir <- DEEBpath::getLogDir(NULL, relative=TRUE, autoId=autoId)
     if (!dir.exists(logDir)) dir.create(logDir, recursive=TRUE, showWarnings=FALSE)
-    command <- paste0(
-      "sbatch ",
-      " --qos=short",
-      " --job-name=", jobName,
-      " --output=",logDir, "/", jobName, "_%j.out",
-      " --error=",logDir, "/", jobName, "_%j.err",
-      if (mail) " --mail-type=END",
-      if (hasValue(timeInMinutes)) " --time=", timeInMinutes,
-      if (hasValue(nCpus)) " --cpus-per-task=", nCpus,
-      if (length(startAfterJobIds) > 0) paste0(" --dependency=afterany:", paste(startAfterJobIds, collapse=":")),
-      " --wrap=\"Rscript -e '", gsub("\"", "\\\\\"", cmdStr), "'\"")
+    if (gpu) {
+      tmpFilePath <- DEEButil::getUniqueFileName(
+        dirPath = "./_tmp",
+        prefix="startComp",
+        fileExtension=".R",
+        identifyingObject=cmdStr,
+        timeStamp=TRUE,
+        fullPath=TRUE)
+      writeLines(c("library(tensorflow)", "tf$config$list_physical_devices(\"GPU\")", cmdStr), tmpFilePath)
+      command <- paste0(
+        "sbatch ",
+        " --qos=gpushort",
+        " --partition=gpu",
+        " --gres=gpu:1",
+        " --job-name=", jobName,
+        " --output=",logDir, "/", jobName, "_%j.out",
+        " --error=",logDir, "/", jobName, "_%j.err",
+        if (mail) " --mail-type=END",
+        if (hasValue(timeInMinutes)) " --time=", timeInMinutes,
+        if (hasValue(nCpus)) " --cpus-per-task=", nCpus,
+        if (length(startAfterJobIds) > 0) paste0(" --dependency=afterany:", paste(startAfterJobIds, collapse=":")),
+        " --wrap=\"Rscript '", tmpFilePath, "'\"")
+    } else {
+      command <- paste0(
+        "sbatch ",
+        " --qos=short",
+        " --job-name=", jobName,
+        " --output=",logDir, "/", jobName, "_%j.out",
+        " --error=",logDir, "/", jobName, "_%j.err",
+        if (mail) " --mail-type=END",
+        if (hasValue(timeInMinutes)) " --time=", timeInMinutes,
+        if (hasValue(nCpus)) " --cpus-per-task=", nCpus,
+        if (length(startAfterJobIds) > 0) paste0(" --dependency=afterany:", paste(startAfterJobIds, collapse=":")),
+        " --wrap=\"Rscript -e '", gsub("\"", "\\\\\"", cmdStr), "'\"")
+    }
     cat(command, "\n")
     output <- system(command, intern = TRUE)
     cat(output, "\n")

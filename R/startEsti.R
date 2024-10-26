@@ -48,7 +48,8 @@ startEstimHyper <- function(
           autoId = NULL,
           prefix = "startEstimHyper",
           timeInMinutes = jobDataRow$timeInMinutes,
-          nCpus = jobDataRow$nCpus
+          nCpus = jobDataRow$nCpus,
+          gpu = if (length(jobDataRow$gpu) > 0) jobDataRow$gpu else FALSE
         )
         jobIds <- c(jobIds, jobId)
       }
@@ -125,7 +126,8 @@ initOneEstimAutoHyper <- function(
           autoId = autoId,
           prefix = "initEstimAutoHyper",
           timeInMinutes = jobDataRow$timeInMinutes,
-          nCpus = jobDataRow$nCpus
+          nCpus = jobDataRow$nCpus,
+          gpu = if (length(jobDataRow$gpu) > 0) jobDataRow$gpu else FALSE
         )
         jobIds <- c(jobIds, jobId)
       }
@@ -210,7 +212,8 @@ continueOneEstimAutoHyper <- function(dbPath, autoId, cubeId) {
           autoId = autoId,
           prefix = "contEstimAutoHyper",
           timeInMinutes = jobDataRow$timeInMinutes,
-          nCpus = jobDataRow$nCpus
+          nCpus = jobDataRow$nCpus,
+          gpu = if (length(jobDataRow$gpu) > 0) jobDataRow$gpu else FALSE
         )
         jobIds <- c(jobIds, jobId)
       }
@@ -403,7 +406,8 @@ startSlurmJobToEvalExpressionList <- function(
   prefix = "DEEB",
   timeInMinutes = NULL,
   nCpus = 1,
-  startAfterJobIds=NULL
+  startAfterJobIds=NULL,
+  gpu=FALSE
 ) {
   cmdDir <- DEEBpath::getCmdDir(dbPath, autoId)
   if (!dir.exists(cmdDir))  dir.create(cmdDir)
@@ -424,7 +428,8 @@ startSlurmJobToEvalExpressionList <- function(
     autoId = !!autoId,
     prefix = !!prefix,
     timeInMinutes = !!timeInMinutes,
-    nCpus = !!nCpus))
+    nCpus = !!nCpus,
+    gpu = !!gpu))
 
   startComp(
     rlang::expr_text(expr),
@@ -444,7 +449,8 @@ startSlurmJobListCarefully <- function(
   autoId,
   prefix,
   timeInMinutes,
-  nCpus
+  nCpus,
+  gpu = FALSE
 ) {
 
   cmdTextAll <- readLines(cmdFilePath)
@@ -465,7 +471,8 @@ startSlurmJobListCarefully <- function(
     autoId = autoId,
     prefix = prefix,
     timeInMinutes = timeInMinutes,
-    nCpus = nCpus)
+    nCpus = nCpus,
+    gpu = gpu)
 }
 
 
@@ -476,7 +483,8 @@ evalExpressionListSlurm <- function(
   prefix = "DEEB",
   timeInMinutes = NULL,
   nCpus = 1,
-  maxJobs = 4000
+  maxJobs = 4000,
+  gpu = FALSE
 ) {
   jobIds <- numeric()
   for (i in seq_along(expressionList)) {
@@ -496,7 +504,8 @@ evalExpressionListSlurm <- function(
       startAfterJobIds = NULL,
       autoId = autoId,
       dbPath = dbPath,
-      pause = 0)
+      pause = 0,
+      gpu = gpu)
     jobIds <- c(jobIds, jobId)
   }
   return(jobIds)
