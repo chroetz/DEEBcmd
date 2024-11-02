@@ -246,6 +246,19 @@ collectJobs <- function(
   pastJobs,
   splitByTruth = FALSE
 ) {
+  cat(sprintf('collectJobs(
+  dbPath = "%s",
+  methodTable = [NROW: %d],
+  truthNrFilter = %s,
+  forceOverwrite = %s,
+  pastJobs = [length: %d],
+  splitByTruth = %s)\n',
+    dbPath,
+    NROW(methodTable),
+    paste(truthNrFilter, collapse=","),
+    forceOverwrite,
+    length(pastJobs),
+    splitByTruth))
 
   nSkipped <- 0
 
@@ -269,9 +282,9 @@ collectJobs <- function(
     hyperParmsList <- DEEBesti::loadAsHyperParmsList(dbPath, methodInfo$methodFile)
     for (expansionNr in seq_along(hyperParmsList$list)) {
       hyperParms <- hyperParmsList$list[[expansionNr]]
-      cat(methodInfo$model, "", hyperParms$name, ": ", sep="")
+      cat(methodInfo$model, ": ", hyperParms$name, ": ", sep="")
       if (forceOverwrite) {
-        openTruthNrs <- truthNrFilter
+        openTruthNrs <- DEEBpath::getUniqueTruthNrs(dbPath, modelFilter = methodInfo$model)
       } else {
         openTruthNrs <- DEEBpath::getOpenTruthNrs(
           dbPath,
