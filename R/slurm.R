@@ -17,7 +17,7 @@ startComp <- function(
     cat("Starting SLURM job", jobName, "\n")
     logDir <- DEEBpath::getLogDir(NULL, relative=TRUE, autoId=autoId)
     if (!dir.exists(logDir)) dir.create(logDir, recursive=TRUE, showWarnings=FALSE)
-    if (gpu) {
+    if (isTRUE(gpu)) {
       tmpFilePath <- DEEButil::getUniqueFileName(
         dirPath = "./_tmp",
         prefix="startComp",
