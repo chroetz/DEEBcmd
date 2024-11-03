@@ -285,6 +285,7 @@ collectJobs <- function(
       cat(methodInfo$model, ": ", hyperParms$name, ": ", sep="")
       if (forceOverwrite) {
         openTruthNrs <- DEEBpath::getUniqueTruthNrs(dbPath, modelFilter = methodInfo$model)
+        if (length(truthNrFilter) > 0) openTruthNrs <- intersect(truthNrFilter, openTruthNrs)
       } else {
         openTruthNrs <- DEEBpath::getOpenTruthNrs(
           dbPath,
