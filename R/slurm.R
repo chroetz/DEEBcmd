@@ -9,7 +9,8 @@ startComp <- function(
   autoId = NULL,
   dbPath = NULL,
   pause = 0,
-  gpu = FALSE
+  gpu = FALSE,
+  tensorflowCheck = FALSE # should be activated for R Tensorflow but not for Julia
 ) {
   cat("startComp():", format(Sys.time()), "\n")
   if (isSlurmAvailable()) {
@@ -25,7 +26,10 @@ startComp <- function(
         identifyingObject=cmdStr,
         timeStamp=TRUE,
         fullPath=TRUE)
-      writeLines(c("library(tensorflow)", "tf$config$list_physical_devices(\"GPU\")", cmdStr), tmpFilePath)
+      if (tensorflowCheck) {
+        writeLines(c("library(tensorflow)", "tf$config$list_physical_devices(\"GPU\")", ""), tmpFilePath)
+      }
+      writeLines(cmdStr, tmpFilePath)
       command <- paste0(
         "sbatch ",
         " --qos=gpushort",
