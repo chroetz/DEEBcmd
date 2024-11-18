@@ -159,6 +159,19 @@ interactAutoHyper <- function(dbPath) {
     multi = TRUE,
     default = "all")
   methodTablePaths <- methodTablePathsAll[methodTablePathsNames]
+
+  if (length(methodTablePaths) == 0) {
+    stop("Did not find any method table name.")
+  }
+
+  methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths) # Expands RegEx!!
+  modelFilter <- getUserInput(
+    "Choose model(s)",
+    methodTable$model |> unique(),
+    multi = TRUE,
+    default = "all")
+  methodTable <- methodTable |> dplyr::filter(.data$model %in% modelFilter)
+
   if (isSlurmAvailable()) {
     runLocal <- FALSE
     parallel <- FALSE
@@ -166,12 +179,6 @@ interactAutoHyper <- function(dbPath) {
     runLocal <- TRUE
     parallel <- getUserInputYesNo("parallel?", "Yes")
   }
-
-  if (length(methodTablePaths) == 0) {
-    stop("Did not find any method table name.")
-  }
-
-  methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths) # Expands RegEx!!
 
   exprList <- lapply(seq_len(nrow(methodTable)), \(i) {
     methodInfo <- methodTable[i, ]
