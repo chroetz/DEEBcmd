@@ -29,9 +29,6 @@ startComp <- function(
       lines <- character()
       if (tensorflowCheck) {
         lines <- c(lines, c("library(tensorflow)", "tf$config$list_physical_devices(\"GPU\")", ""))
-      } else { # Julia
-        lines <- c(lines,
-          "cat(system(\"julia /p/projects/ou/labs/ai/DEEB/DeebDbLorenzBigTune/testJuliaGpu.jl\", intern=TRUE))")
       }
       lines <- c(lines, cmdStr)
       writeLines(lines, tmpFilePath)
