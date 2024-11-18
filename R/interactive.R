@@ -164,13 +164,14 @@ interactAutoHyper <- function(dbPath) {
     stop("Did not find any method table name.")
   }
 
-  methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths) # Expands RegEx!!
-  modelFilter <- getUserInput(
-    "Choose model(s)",
-    methodTable$model |> unique(),
-    multi = TRUE,
-    default = "all")
-  methodTable <- methodTable |> dplyr::filter(.data$model %in% modelFilter)
+  # # TODO: This is not enough! Upcoming auto jobs do not use the filter!!
+  # methodTable <- DEEBpath::getMethodTable(dbPath, methodTablePaths) # Expands RegEx!!
+  # modelFilter <- getUserInput(
+  #   "Choose model(s)",
+  #   methodTable$model |> unique(),
+  #   multi = TRUE,
+  #   default = "all")
+  # methodTable <- methodTable |> dplyr::filter(.data$model %in% modelFilter)
 
   if (isSlurmAvailable()) {
     runLocal <- FALSE
