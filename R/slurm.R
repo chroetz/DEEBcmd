@@ -26,14 +26,15 @@ startComp <- function(
         identifyingObject=cmdStr,
         timeStamp=TRUE,
         fullPath=TRUE)
+      lines <- character()
       if (tensorflowCheck) {
-        writeLines(c("library(tensorflow)", "tf$config$list_physical_devices(\"GPU\")", ""), tmpFilePath)
+        lines <- c(lines, c("library(tensorflow)", "tf$config$list_physical_devices(\"GPU\")", ""))
       } else { # Julia
-        writeLines(
-          "cat(system(\"julia /p/projects/ou/labs/ai/DEEB/DeebDbLorenzBigTune/testJuliaGpu.jl\", intern=TRUE))",
-          tmpFilePath)
+        lines <- c(lines,
+          "cat(system(\"julia /p/projects/ou/labs/ai/DEEB/DeebDbLorenzBigTune/testJuliaGpu.jl\", intern=TRUE))")
       }
-      writeLines(cmdStr, tmpFilePath)
+      lines <- c(lines, cmdStr)
+      writeLines(lines, tmpFilePath)
       command <- paste0(
         "sbatch ",
         " --qos=gpushort",
