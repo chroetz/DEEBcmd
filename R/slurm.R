@@ -28,6 +28,10 @@ startComp <- function(
         fullPath=TRUE)
       if (tensorflowCheck) {
         writeLines(c("library(tensorflow)", "tf$config$list_physical_devices(\"GPU\")", ""), tmpFilePath)
+      } else { # Julia
+        writeLines(
+          "cat(system(\"julia /p/projects/ou/labs/ai/DEEB/DeebDbLorenzBigTune/testJuliaGpu.jl\", intern=TRUE))",
+          tmpFilePath)
       }
       writeLines(cmdStr, tmpFilePath)
       command <- paste0(
